@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Yogurt Shares feature.
+ */
+
+include_once('yogurt_shares.features.inc');
