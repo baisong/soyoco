@@ -1,0 +1,10 @@
+; $Id$
+
+name = soyoco
+description = Custom module by Oren Robinson
+package = Custom
+core = 7.x
+ 
+files[] = soyoco.module
+files[] = soyoco.theme.inc
+files[] = soyoco.date.inc
