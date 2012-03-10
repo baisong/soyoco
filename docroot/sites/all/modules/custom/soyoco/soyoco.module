@@ -10,6 +10,17 @@
  *
  *
  */
+function soyoco_init() {
+  drupal_set_message('loading includes...');
+  module_load_include('module','soyoco','soyoco.util');
+  module_load_include('module','soyoco','soyoco.compute');
+}
+
+/**
+ * implements hook_nodeapi()
+ *
+ *
+ */
 function soyoco_nodeapi() {
  /*
  // @TODO auto-create missing work-shifts
@@ -50,6 +61,7 @@ function soyoco_theme() {
     ),
   );
 }
+
 /**
  * implements hook_user()
  *
