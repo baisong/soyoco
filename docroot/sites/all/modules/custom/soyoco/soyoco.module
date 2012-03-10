@@ -13,36 +13,7 @@
 function soyoco_init() {
   module_load_include('inc','soyoco','soyoco.util');
   module_load_include('inc','soyoco','soyoco.compute');
-}
-
-/**
- * implements hook_nodeapi()
- *
- *
- */
-function soyoco_nodeapi() {
- /*
- // @TODO auto-create missing work-shifts
- //
- // when you save a share node,
- // compare it's end date to future-est end date var
- // if it's less-than, do nothing.
- // if it's more than,
- //    loop from futurest end date var to this new end_date
- //        create a new work shift for each week
- */
- /*
-  switch($type) {
-    case 'yogurt_share':
-      if ($op === 'view') {
-        $node->wjars_val  = soyoco_view_node_fields($node,'w_jars');
-        $node->njars_val  = soyoco_view_node_fields($node,'n_jars');
-        $node->duration   = soyoco_view_node_fields($node,'begin_date');
-        $node->end_date   = $node->field_begin_date['und'][0]['value2'];
-        $node->weeks_left = soyoco_weeks_til_expiry($end_date);
-      }
-      break;
-  } */
+  module_load_include('inc','soyoco','soyoco.node');
 }
 
 

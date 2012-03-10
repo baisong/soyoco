@@ -22,16 +22,11 @@ function _soyoco_render_my_active_share() {
   
   $output = '';
   if ($count < 1) {
-    $output .= 'You do not currently have an active share.';
+    $empty_text = 'You do not currently have an active share.';
+    $output .= $empty_text;
   } else {
     while($record = $result->fetchAssoc()) {
-      //$node = node_load($record['nid']);
-      /*$wjars_val = soyoco_view_node_fields($node,'w_jars');
-      $njars_val = soyoco_view_node_fields($node,'n_jars');
-      $duration = soyoco_view_node_fields($node,'begin_date');
-      $end_date = $node->field_begin_date['und'][0]['value2'];
-      $weeks_left = soyoco_weeks_til_expiry($end_date);*/
-      $output .= theme('soyoco_yogurt_share',$record['nid']);
+      $output .= theme('soyoco_yogurt_share',array('node' => node_load($record['nid'])));
     }
   }
   return $output;
@@ -41,40 +36,36 @@ function _soyoco_render_my_active_share() {
 /**
  * soyoco_weeks_til_expiry($end_date)
  *
+ * @param  $end_date      - the final date of a work shift
+ * @return $weeks_elapsed - the number of weeks between now and then
  *
+ * note: this function "rounds up" from now and end date to soonest Saturday.
  */
 function soyoco_weeks_til_expiry($end_date) {
-  $this_week = soyoco_next_shareweek_ends(time());
-  $expire_week = soyoco_next_shareweek_ends($end_date);
+  $this_week    = _soyoco_round_up_week(time());
+  $expire_week  = _soyoco_round_up_week($end_date);
   $interval = $expire_week - $this_week;
   $num_days = intval(floor($interval/(60*60*24)));
-  $num_weeks = ($num_days + 7) / 7;
-  return $num_weeks;
+  $weeks_elapsed = ($num_days + 7) / 7;
+  return $weeks_elapsed;
 }
 
 
 /**
  * soyoco_next_shareweek_ends()
  *
- *
+ * @param  $end_date
+ * @param $day
+ * @return
  */
-function soyoco_next_shareweek_ends($end_date,$day = 'Saturday') {
-  $ret = strtotime('next ' . $day);
+function _soyoco_round_up_week($end_date,$day = 'Saturday') {
+  $final_date = strtotime('next ' . $day);
   $ONE_WEEK = 60*60*24*7;
   
-  while ($ret < strtotime($end_date)) {
-    $ret += $ONE_WEEK;
+  while ($final_date < strtotime($end_date)) {
+    $final_date += $ONE_WEEK;
   }
-  return $ret;
-}
-
-/**
- * soyoco_theme_share($wjar,$njar,$weeks_left,$duration)
- *
- *
- */
-function soyoco_theme_share($wjar,$njar,$weeks_left,$duration) {
-
+  return $final_date;
 }
 
 
@@ -83,7 +74,7 @@ function soyoco_theme_share($wjar,$njar,$weeks_left,$duration) {
  *
  *
  */
-function soyoco_view_node_fields($node,$fieldname) {
+function _soyoco_view_node_fields($node,$fieldname) {
   $output = '';
   $fname = 'field_' . $fieldname;
   $fields = field_get_items('node', $node, $fname);

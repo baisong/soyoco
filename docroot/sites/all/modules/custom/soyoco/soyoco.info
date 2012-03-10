@@ -8,3 +8,4 @@ core = 7.x
 files[] = soyoco.module
 files[] = soyoco.compute.inc
 files[] = soyoco.util.inc
+files[] = soyoco.node.inc
