@@ -1,17 +1,48 @@
 <?php
+
 /**
- *
+ * @file soyoco.util.inc
+ * Drupal 7 module private functions & utilities
+ */
+
+/**
+ * _soyoco_display_user_info()
  *
  *
  */
+function _soyoco_display_user_info() {
+  global $user;
+  $query = db_select('node', 'n')
+    ->fields('n')
+    ->condition('uid',$user->uid,'=')
+    ->orderBy('created', 'DESC');
+  
+  $result = $query->execute();
+  $count = $result->rowCount();
+  
+  $output = '';
+  if ($count < 1) {
+    $output .= 'You do not currently have an active share.';
+  } else {
+    while($record = $result->fetchAssoc()) {
+      $node = node_load($record['nid']);
+      $wjars_val = soyoco_view_node_fields($node,'w_jars');
+      $njars_val = soyoco_view_node_fields($node,'n_jars');
+      $duration = soyoco_view_node_fields($node,'begin_date');
+      $end_date = $node->field_begin_date['und'][0]['value2'];
+      $weeks_left = soyoco_weeks_til_expiry($end_date);
+      $output .= soyoco_theme_share($wjars_val,$njars_val,$weeks_left,$duration);
+    }
+  }
+}
 
 
 /**
- *
+ * soyoco_weeks_til_expiry($end_date)
  *
  *
  */
-function soyoco_weeks_til_expiry($end_date){
+function soyoco_weeks_til_expiry($end_date) {
   $this_week = soyoco_next_shareweek_ends(time());
   $expire_week = soyoco_next_shareweek_ends($end_date);
   $interval = $expire_week - $this_week;
@@ -22,11 +53,11 @@ function soyoco_weeks_til_expiry($end_date){
 
 
 /**
- *
+ * soyoco_next_shareweek_ends()
  *
  *
  */
-function soyoco_next_shareweek_ends($end_date,$day = 'Saturday'){
+function soyoco_next_shareweek_ends($end_date,$day = 'Saturday') {
   $ret = strtotime('next ' . $day);
   $ONE_WEEK = 60*60*24*7;
   
@@ -37,11 +68,11 @@ function soyoco_next_shareweek_ends($end_date,$day = 'Saturday'){
 }
 
 /**
- *
+ * soyoco_theme_share($wjar,$njar,$weeks_left,$duration)
  *
  *
  */
-function soyoco_theme_share($wjar,$njar,$weeks_left,$duration){
+function soyoco_theme_share($wjar,$njar,$weeks_left,$duration) {
   $output  = '<div class="row"><div class="span5 well" style="height:100px"><div class="row"><div class="span3">';
   for ($i=0;$i<$wjar;$i++) {
     $output .= '[W]';
@@ -58,7 +89,7 @@ function soyoco_theme_share($wjar,$njar,$weeks_left,$duration){
 
 
 /**
- *
+ * soyoco_view_node_fields()
  *
  *
  */

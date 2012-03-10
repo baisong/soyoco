@@ -65,7 +65,8 @@ function soyoco_user_view($account, $view_mode = 'full', $langcode = NULL) {
   if (isset($account->content['summary']['member_for'])) {
     unset($account->content['summary']['member_for']);
   }
-    
+  
+  // adding more to the user summary  
   $account->content['summary'] .= array(
     '#type' => 'user_profile_category', 
     '#attributes' => array('class' => array('user-member')), 
@@ -73,37 +74,14 @@ function soyoco_user_view($account, $view_mode = 'full', $langcode = NULL) {
     '#title' => t('My Yogurt Account'),
   );
   
-  global $user;
-  $query = db_select('node', 'n')
-    ->fields('n')
-    //->fields('n',array('field_w_jars', 'field_n_jars'))
-    ->condition('uid',$user->uid,'=')
-    ->orderBy('created', 'DESC');
+  $display = _soyoco_display_user_info();
   
-  $result = $query->execute();
-  $count = $result->rowCount();
-  
-  $output = '';
-  if ($count < 1) {
-    $output .= 'You do not currently have an active share.';
-  } else {
-    while($record = $result->fetchAssoc()) {
-      //$output .= print_r($record,TRUE);
-      $node = node_load($record['nid']);
-      $wjars_val = soyoco_view_node_fields($node,'w_jars');
-      $njars_val = soyoco_view_node_fields($node,'n_jars');
-      $duration = soyoco_view_node_fields($node,'begin_date');
-      $end_date = $node->field_begin_date['und'][0]['value2'];
-      $weeks_left = soyoco_weeks_til_expiry($end_date);
-      $output .= soyoco_theme_share($wjars_val,$njars_val,$weeks_left,$duration);
-    }
-  }
   $account->content['summary']['soyoco'] =  array(
     '#type' => 'user_profile_item',
     '#attributes' => array('class' => array('soyoco')), 
     '#title' =>  t('My Active Share'),
     '#markup' => 
-      t($output), 
+      t($display), 
       '#attributes' => array('class' => array('icon-heart')
     ),
   );
