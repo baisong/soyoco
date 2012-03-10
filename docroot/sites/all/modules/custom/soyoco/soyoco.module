@@ -5,11 +5,6 @@
  * Drupal 7 module
  */
 
-function soyoco_init() {
-  module_load_include('inc', 'soyoco', 'soyoco.compute');
-  module_load_include('inc', 'soyoco', 'soyoco.util');
-}
-
 /**
  * implements hook_nodeapi()
  *
@@ -63,6 +58,7 @@ function soyoco_theme() {
 function soyoco_user_view($account, $view_mode = 'full', $langcode = NULL) {
   //drupal_set_message(t('Look at me! 2'));
     
+  // removing 'member for...' message
   if (!isset($account->content['summary'])) {
     $account->content['summary'] = array();
   }
@@ -70,7 +66,7 @@ function soyoco_user_view($account, $view_mode = 'full', $langcode = NULL) {
     unset($account->content['summary']['member_for']);
   }
     
-  $account->content['summary'] += array(
+  $account->content['summary'] .= array(
     '#type' => 'user_profile_category', 
     '#attributes' => array('class' => array('user-member')), 
     '#weight' => 5, 
