@@ -25,13 +25,13 @@ function _soyoco_render_my_active_share() {
     $output .= 'You do not currently have an active share.';
   } else {
     while($record = $result->fetchAssoc()) {
-      $node = node_load($record['nid']);
-      $wjars_val = soyoco_view_node_fields($node,'w_jars');
+      //$node = node_load($record['nid']);
+      /*$wjars_val = soyoco_view_node_fields($node,'w_jars');
       $njars_val = soyoco_view_node_fields($node,'n_jars');
       $duration = soyoco_view_node_fields($node,'begin_date');
       $end_date = $node->field_begin_date['und'][0]['value2'];
-      $weeks_left = soyoco_weeks_til_expiry($end_date);
-      $output .= soyoco_theme_share($wjars_val,$njars_val,$weeks_left,$duration);
+      $weeks_left = soyoco_weeks_til_expiry($end_date);*/
+      $output .= theme('soyoco_yogurt_share',$record['nid']);
     }
   }
   return $output;
@@ -74,18 +74,7 @@ function soyoco_next_shareweek_ends($end_date,$day = 'Saturday') {
  *
  */
 function soyoco_theme_share($wjar,$njar,$weeks_left,$duration) {
-  $output  = '<div class="row"><div class="span5 well" style="height:100px"><div class="row"><div class="span3">';
-  for ($i=0;$i<$wjar;$i++) {
-    $output .= '[W]';
-  }
-  for ($i=0;$i<$njar;$i++) {
-    $output .= '[N]';
-  }
-  $output .= '</div><div class="span2"><p><strong>Whole Fats:</strong> ' . strval($wjar) . '</p>';
-  $output .= '<p><strong>Non Fat:</strong> ' . strval($njar) . '</p></div></div></div>';
-  $output .= '<div class="span3 well" style="height:100px"><div class="jumbotron"><h1>' . strval($weeks_left) . ' <small>weeks left</small></h1></div>';  
-  $output .= '<div style="color:#333"><dl><dt>Share Duration:</dt><dd>' . strval($duration) . '</dd></dl></div></div>';  
-  return $output;
+
 }
 
 

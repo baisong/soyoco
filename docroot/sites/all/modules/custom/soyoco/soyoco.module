@@ -11,9 +11,8 @@
  *
  */
 function soyoco_init() {
-  drupal_set_message('loading includes...');
-  module_load_include('module','soyoco','soyoco.util');
-  module_load_include('module','soyoco','soyoco.compute');
+  module_load_include('inc','soyoco','soyoco.util');
+  module_load_include('inc','soyoco','soyoco.compute');
 }
 
 /**
@@ -32,6 +31,7 @@ function soyoco_nodeapi() {
  //    loop from futurest end date var to this new end_date
  //        create a new work shift for each week
  */
+ /*
   switch($type) {
     case 'yogurt_share':
       if ($op === 'view') {
@@ -42,7 +42,7 @@ function soyoco_nodeapi() {
         $node->weeks_left = soyoco_weeks_til_expiry($end_date);
       }
       break;
-  }
+  } */
 }
 
 
@@ -54,9 +54,9 @@ function soyoco_nodeapi() {
 function soyoco_theme() {
   $tpl_path = drupal_get_path('module', 'soyoco') . '/theme';
   return array(
-    'soyoco_user_profile_view' => array(
-      'arguments' => array(),
-      'template' => 'user-profile-view',
+    'soyoco_yogurt_share' => array(
+      'variables' => array('node' => NULL),
+      'template' => 'yogurt-share',
       'path' => $tpl_path,
     ),
   );
@@ -79,7 +79,7 @@ function soyoco_user_view($account, $view_mode = 'full', $langcode = NULL) {
   }
   
   // adding more to the user summary  
-  $account->content['summary'] .= array(
+  $account->content['summary'] += array(
     '#type' => 'user_profile_category', 
     '#attributes' => array('class' => array('user-member')), 
     '#weight' => 5, 
