@@ -6,5 +6,5 @@ package = Custom
 core = 7.x
  
 files[] = soyoco.module
-files[] = soyoco.theme.inc
-files[] = soyoco.date.inc
+files[] = soyoco.compute.inc
+files[] = soyoco.util.inc
