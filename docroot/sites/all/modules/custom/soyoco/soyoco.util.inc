@@ -10,7 +10,7 @@
  *
  *
  */
-function _soyoco_display_user_info() {
+function _soyoco_render_my_active_share() {
   global $user;
   $query = db_select('node', 'n')
     ->fields('n')
@@ -34,6 +34,7 @@ function _soyoco_display_user_info() {
       $output .= soyoco_theme_share($wjars_val,$njars_val,$weeks_left,$duration);
     }
   }
+  return $output;
 }
 
 

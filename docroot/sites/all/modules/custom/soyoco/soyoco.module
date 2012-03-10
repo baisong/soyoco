@@ -74,14 +74,12 @@ function soyoco_user_view($account, $view_mode = 'full', $langcode = NULL) {
     '#title' => t('My Yogurt Account'),
   );
   
-  $display = _soyoco_display_user_info();
-  
   $account->content['summary']['soyoco'] =  array(
     '#type' => 'user_profile_item',
     '#attributes' => array('class' => array('soyoco')), 
     '#title' =>  t('My Active Share'),
     '#markup' => 
-      t($display), 
+      _soyoco_render_my_active_share(), 
       '#attributes' => array('class' => array('icon-heart')
     ),
   );
