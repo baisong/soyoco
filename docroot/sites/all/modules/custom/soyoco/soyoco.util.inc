@@ -74,13 +74,13 @@ function _soyoco_round_up_week($end_date,$day = 'Saturday') {
  *
  *
  */
-function _soyoco_view_node_fields($node,$fieldname) {
+function _soyoco_view_node_fields($node,$fieldname,$entity_type='node') {
   $output = '';
   $fname = 'field_' . $fieldname;
-  $fields = field_get_items('node', $node, $fname);
+  $fields = field_get_items($entity_type, $node, $fname);
 
   foreach ($fields as $key=>$value) {
-    $this_field = field_view_value('node', $node, $fname, $fields[$key]);
+    $this_field = field_view_value($entity_type, $node, $fname, $fields[$key]);
     $output .= render($this_field); 
   } 
   return $output;

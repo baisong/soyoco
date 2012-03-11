@@ -68,7 +68,16 @@ function computed_field_field_weeks_left_compute(&$entity_field, $entity_type, $
  *
  */
 function computed_field_field_adjusted_jar_count_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
-  // @TODO Jars - Discount
+  // add up whole and non fat jars
+  $w_jars = _soyoco_view_node_fields($entity,'w_jars');
+  $n_jars = _soyoco_view_node_fields($entity,'n_jars');
+  $total_jars = $w_jars + $n_jars;
+  
+  // get the discount from this user's main profile
+  $user_profile = profile2_load_by_user(user_load($entity->uid)); 
+  $discount = $user_profile['main']->field_per_share_discount['und'][0]['value'];
+  
+  $entity_field[0]['value'] = floatval($total_jars - $discount);
 }
 
 
