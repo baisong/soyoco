@@ -85,3 +85,13 @@ function _soyoco_view_node_fields($node,$fieldname,$entity_type='node') {
   } 
   return $output;
 }
+
+function _soyoco_query_active_shares() {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->propertyCondition('status', 1)
+    ->fieldCondition('field_begin_date', 'value2', time(), '>')
+    ->addMetaData('account', user_load(1)); // run the query as user 1  
+  
+  return $query->execute();
+}

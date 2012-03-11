@@ -17,6 +17,18 @@
  */ 
 function computed_field_field_cooks_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
  // @TODO sum primary_cook + count(joint_cooks)
+  $primary_cook = $entity->field_primary_cook;
+  $joint_cooks = $entity->field_joint_cooks;
+  if (empty($primary_cook) && empty($joint_cooks)) { return; }
+  
+  $cooks = 0;
+  if (!empty($primary_cook)) {
+    $cooks += 1;
+  }
+  if (count($joint_cooks)) {
+    $cooks += count($joint_cooks);
+  }
+  $entity_field[0]['value'] = $cooks;
 }
 
 
@@ -27,6 +39,14 @@ function computed_field_field_cooks_compute(&$entity_field, $entity_type, $entit
  */ 
 function computed_field_field_status_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
  // @TODO check primary cook's setting, mark as OPEN or CLOSED
+  $user_profile = profile2_load_by_user(user_load($entity->uid)); 
+  $joint_work_shifts_welcome = $user_profile['main']->joint_work_shifts_welcome['und'][0]['value'];
+  
+  $status = 'OPEN';
+  if !($joint_work_shifts_welcome) {
+    $status = 'CLOSED';
+  }
+  $entity_field[0]['value'] = $status;
 }
 
 
@@ -37,6 +57,16 @@ function computed_field_field_status_compute(&$entity_field, $entity_type, $enti
  */
 function computed_field_field_total_jars_cooked_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // @TODO sum field_w_jars_cooked + field_n_jars_cooked
+  $sum = 0;
+  $w_jars_cooked = _soyoco_view_node_fields($entity,'w_jars_cooked');
+  $n_jars_cooked = _soyoco_view_node_fields($entity,'n_jars_cooked');
+  
+  if (empty($w_jars_cooked) && empty($n_jars_cooked)) {
+    return;
+  }
+  
+  $total_jars_cooked = $w_jars_cooked + $n_jars_cooked;
+  $entity_field = $total_jars_cooked;
 }
 
 /**
@@ -88,6 +118,25 @@ function computed_field_field_adjusted_jar_count_compute(&$entity_field, $entity
  */
 function computed_field_field_work_share_goal_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // @TODO Term/Sum of all Per Member Adjusted Jar Counts
+  $term = variable_get('weeks_in_one_term', 24);
+  
+  // query all active shares
+  $active_shares = _soyoco_query_active_shares();
+  
+  if (isset($active_shares['node'])) {
+    $nids = array_keys($active_shares['node']);
+    $nodes = entity_load('node', $nids);
+  }
+  
+  $adjusted_jar_count_sum = 0;
+  foreach ($nodes as $node) {
+    if (!empty($node->field_adjusted_jar_count)) {
+      dpm($node->field_adjusted_jar_count);
+      $adjusted_jar_count_sum += $node->field_adjusted_jar_count['und'][0]['value'];
+    }
+  }
+  drupal_set_message($term . ' divided by ' . $adjusted_jar_count_sum);
+  $entity_field[0]['value'] = floatval($term / $adjusted_jar_count_sum);
 }
 
 
@@ -98,6 +147,10 @@ function computed_field_field_work_share_goal_compute(&$entity_field, $entity_ty
  */
 function computed_field_field_work_share_completed_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // @TODO Sum points earned from all past work shifts
+  // query all work shifts with this user as primary cook
+  // foreach one, add up points
+  //
+
 }
 
 
@@ -108,6 +161,9 @@ function computed_field_field_work_share_completed_compute(&$entity_field, $enti
  */
 function computed_field_field_work_share_difference_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // @TODO Work Share Goal - Work Share Completed
+  $goal       = _soyoco_view_node_fields($entity,'work_share_goal');
+  $completed  = _soyoco_view_node_fields($entity,'work_share_completed');
+  $entity_field[0]['value'] = floatval($goal - $completed);
 }
 
 
@@ -118,6 +174,9 @@ function computed_field_field_work_share_difference_compute(&$entity_field, $ent
  */
 function computed_field_field_completed_percentage_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // @TODO Work Share Goal / Work Share Completed
+  $goal       = _soyoco_view_node_fields($entity,'work_share_goal');
+  $completed  = _soyoco_view_node_fields($entity,'work_share_completed');
+  $entity_field[0]['value'] = intval(floatval(100 * $completed / $goal));
 }
 
 
