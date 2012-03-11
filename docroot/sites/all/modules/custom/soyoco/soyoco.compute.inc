@@ -1,8 +1,8 @@
 <?php
 
 /**
- *
- *
+ * @file soyoco.compute.inc
+ * Drupal 7 module - computed field callback functions
  */
  
 
@@ -43,7 +43,7 @@ function computed_field_field_status_compute(&$entity_field, $entity_type, $enti
   $joint_work_shifts_welcome = $user_profile['main']->joint_work_shifts_welcome['und'][0]['value'];
   
   $status = 'OPEN';
-  if !($joint_work_shifts_welcome) {
+  if (!$joint_work_shifts_welcome) {
     $status = 'CLOSED';
   }
   $entity_field[0]['value'] = $status;
@@ -117,7 +117,6 @@ function computed_field_field_adjusted_jar_count_compute(&$entity_field, $entity
  *
  */
 function computed_field_field_work_share_goal_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
-  // @TODO Term/Sum of all Per Member Adjusted Jar Counts
   $term = variable_get('weeks_in_one_term', 24);
   
   // query all active shares
@@ -147,10 +146,13 @@ function computed_field_field_work_share_goal_compute(&$entity_field, $entity_ty
  */
 function computed_field_field_work_share_completed_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // @TODO Sum points earned from all past work shifts
+  
+  $work_share_completed = 0;
   // query all work shifts with this user as primary cook
+  // foreach one, add up points (points = 1/$shift->cooks)
+  // query all work shifts with this user as joint cook
   // foreach one, add up points
-  //
-
+  $entity_field[0]['value'] = $work_share_completed;
 }
 
 

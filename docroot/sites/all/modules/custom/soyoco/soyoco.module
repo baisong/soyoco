@@ -14,6 +14,7 @@ function soyoco_init() {
   module_load_include('inc','soyoco','soyoco.util');
   module_load_include('inc','soyoco','soyoco.compute');
   module_load_include('inc','soyoco','soyoco.node');
+  module_load_include('inc','soyoco','soyoco.query');
 }
 
 
