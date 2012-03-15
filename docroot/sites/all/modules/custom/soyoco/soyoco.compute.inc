@@ -75,13 +75,15 @@ function computed_field_field_total_jars_cooked_compute(&$entity_field, $entity_
  *
  */
 function computed_field_field_end_date_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
-  $start = $entity->field_start_date['und'][0]['value'];
+  $start_date = $entity->field_start_date['und'][0]['value'];
   $duration = $entity->field_duration['und'][0]['value'];
-  if (!isset($start) || !isset($duration)) {
+  if (!isset($start_date) || !isset($duration)) {
     return;
   }
   $offset = ' + ' . $duration . ' Thursdays';
-  $end_date = strtotime(date("Y-m-d", strtotime($start)) . $offset);
+  $end_date = strtotime(date("Y-m-d", strtotime($start_date)) . $offset);
+  //dpm($start_date);dpm($end_date);
+  _soyoco_add_missing_work_shifts(strtotime($start_date), $end_date);
   $entity_field[0]['value'] = $end_date;
 }
 

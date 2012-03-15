@@ -12,6 +12,7 @@
  */
 function _soyoco_render_my_active_share() {
   global $user;
+  // display shares
   $nodes = _soyoco_query_user_active_shares($user->uid);  
   if (!$nodes) {
     return 'You do not currently have an active share.';
@@ -19,6 +20,17 @@ function _soyoco_render_my_active_share() {
     $output = '';
     foreach ($nodes as $node) {
       $output .= theme('soyoco_yogurt_share',array('node' => $node));
+    }
+  }
+  // attach work shifts remaining
+  if (isset($node->field_end_date['und'][0]['value'])) {
+    $nodes = _soyoco_query_work_shifts_remaining($node->field_end_date['und'][0]['value']);
+    if ($nodes) {
+      foreach ($nodes as $node) {
+        $output .= theme('node_page',array('node' => $node));
+      } 
+    } else {
+      $output .= '<p>No remaining work shifts!</p>';
     }
   }
   return $output;
@@ -81,6 +93,20 @@ function _soyoco_view_node_fields($node,$fieldname,$entity_type='node') {
   return $output;
 }
 
+/**
+ * _soyoco_add_missing_work_shifts()
+ */
+function _soyoco_add_missing_work_shifts($start_date,$end_date) {
+  //dpm($start_date,__FUNCTION__);dpm($end_date,__FUNCTION__);
+  $plus_one_week = ' +1 week';
+  $iter_date = $start_date;
+  while ($iter_date < $end_date) {
+    $nodes = _soyoco_query_shift_by_date($iter_date);
+    dpm($nodes,__FUNCTION__);
+    _soyoco_add_work_shift($iter_date);
+    $iter_date = strtotime(date("Y-m-d",$iter_date) . ' +1 week');
+  }
+}
 
 /**
  * _soyoco_update_shares()
@@ -100,3 +126,70 @@ function _soyoco_update_shares() {
   }
 }
 
+function _soyoco_work_shift_title($datetime) {
+  // return something like "January C" for the third week of january
+  $week_names = array('A','B','C','D','E');
+  $week_ordinal = 0;
+  
+  $month = date('F',$datetime); // i.e. "January"
+  $i = strtotime(date("Y-m-d",$datetime) . ' -1 week');
+  $i_month = date('F',$i);
+  while ($i_month == $month) {
+    // keep subtracting a week
+    $i = strtotime(date("Y-m-d",$i) . ' -1 week');
+    $i_month = date('F',$i);
+    // increment week ordinal
+    $week_ordinal += 1;
+  }
+  //dpm($month);
+  //dpm($week_ordinal);
+  $title = $month . ' ' . $week_names[$week_ordinal];
+  return $title;
+}
+
+function _soyoco_add_work_shift($datetime) {
+  $date = date("Y-m-d",$datetime) . 'T00:00:00';
+  //_soyoco_intToDateArray($datetime);
+  dpm($date,__FUNCTION__);
+  $name = 'soyoco';
+  $title = _soyoco_work_shift_title($datetime);
+  $values = array(
+    'yogurt_week_date' => $date,
+  );
+  drupal_set_message('adding workshift ' . $title . ' for ' . $date);
+  _soyoco_add_node('work_shift',$title,$name,$values);
+}
+
+function _soyoco_add_node($type,$title = 'untitled',$name = 'soyoco',$values = array()) {
+  module_load_include('inc', 'node', 'node.pages');
+  $node = (object) array(
+    'type' => $type,
+    'language' => LANGUAGE_NONE
+  );
+  node_object_prepare($node);
+     
+  $form_state = array();  
+  $form_state['values']['title'] = $title;  
+  $form_state['values']['name'] = $name;  
+  $form_state['values']['op'] = t('Save');
+  if (count($values)) {
+    foreach ($values as $fieldname=>$value) {
+      dpm($fieldname,__FUNCTION__);dpm($value,__FUNCTION__);
+      $form_state['values']['field_' . $fieldname][$node->language][0]['value'] = $value;  
+    }
+  }
+  drupal_form_submit("{$node->type}_node_form", $form_state, $node);
+}
+
+/**
+ * Utility function which converts a string representation of a unix timestamp
+ * and converts to an array suitable for the Drupal date widget (3 drop down combo 
+ * boxes, month, day, year).
+ */
+function _soyoco_intToDateArray($timestr) {
+  $timestamp = intval($timestr);
+  $year = date('Y', $timestamp);
+  $month = date('m',$timestamp);
+  $day = date('d',$timestamp);
+  return array('year' => $year, 'month' => $month, 'day' => $day);
+}

@@ -92,6 +92,42 @@ function _soyoco_query_work_shifts_as_joint($uid) {
 
 
 /**
+ *
+ */
+function _soyoco_query_shift_by_date($datetime) {
+  $date = date("Y-m-d h:i:s",$datetime);
+  
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->propertyCondition('type', 'work_shift')
+    ->propertyCondition('status', 1)
+    ->fieldCondition('field_yogurt_week_date','value', $date, '=')
+    ->addMetaData('account', user_load(1)); // run the query as user 1  
+  
+  $result = $query->execute();
+  return _soyoco_query_load_nodes($result);  
+}
+
+
+/**
+ * _soyoco_query_work_shifts_remaining()
+ *
+ * @TODO: make this only look for active share work shifts
+ */ 
+function _soyoco_query_work_shifts_remaining($end_date) {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->propertyCondition('type', 'work_shift')
+    ->propertyCondition('status', 1)
+    ->fieldCondition('field_yogurt_week_date','value', $end_date, '<=')
+    ->addMetaData('account', user_load(1)); // run the query as user 1  
+  
+  $result = $query->execute();
+  return _soyoco_query_load_nodes($result);
+}
+
+
+/**
  * _soyoco_query_final_work_shift_date()
  *
  *
