@@ -6,27 +6,19 @@
  */
 
 /**
- * _soyoco_display_user_info()
+ * _soyoco_render_my_active_share()
  *
  *
  */
 function _soyoco_render_my_active_share() {
   global $user;
-  $query = db_select('node', 'n')
-    ->fields('n')
-    ->condition('uid',$user->uid,'=')
-    ->orderBy('created', 'DESC');
-  
-  $result = $query->execute();
-  $count = $result->rowCount();
-  
-  $output = '';
-  if ($count < 1) {
-    $empty_text = 'You do not currently have an active share.';
-    $output .= $empty_text;
+  $nodes = _soyoco_query_user_active_shares($user->uid);  
+  if (!$nodes) {
+    return 'You do not currently have an active share.';
   } else {
-    while($record = $result->fetchAssoc()) {
-      $output .= theme('soyoco_yogurt_share',array('node' => node_load($record['nid'])));
+    $output = '';
+    foreach ($nodes as $node) {
+      $output .= theme('soyoco_yogurt_share',array('node' => $node));
     }
   }
   return $output;
@@ -58,7 +50,7 @@ function soyoco_weeks_til_expiry($end_date) {
  * @param $day
  * @return
  */
-function _soyoco_round_up_week($end_date,$day = 'Saturday') {
+function _soyoco_round_up_week($end_date,$day = 'Thursday') {
   $final_date = strtotime('next ' . $day);
   $ONE_WEEK = 60*60*24*7;
   
@@ -78,12 +70,33 @@ function _soyoco_view_node_fields($node,$fieldname,$entity_type='node') {
   $output = '';
   $fname = 'field_' . $fieldname;
   $fields = field_get_items($entity_type, $node, $fname);
-
-  foreach ($fields as $key=>$value) {
-    $this_field = field_view_value($entity_type, $node, $fname, $fields[$key]);
-    $output .= render($this_field); 
-  } 
+  if (is_array($fields)) {
+    foreach ($fields as $key=>$value) {
+      $this_field = field_view_value($entity_type, $node, $fname, $fields[$key]);
+      $output .= render($this_field); 
+    }
+  } else {
+    drupal_set_message('You cannot retrieve field_' . $fieldname . ' from node ' . $node-> type . $node->nid);
+  }
   return $output;
 }
 
+
+/**
+ * _soyoco_update_shares()
+ *
+ *
+ */
+function _soyoco_update_shares() {
+  $active_shares = _soyoco_query_active_shares();
+  if (isset($active_shares['node'])) {
+    $nids = array_keys($active_shares['node']);
+    $nodes = entity_load('node', $nids);
+  } else {
+    return;
+  }
+  foreach ($nodes as $node) {
+    node_save($node);
+  }
+}
 

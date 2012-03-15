@@ -16,16 +16,17 @@
  *
  */ 
 function computed_field_field_cooks_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
- // @TODO sum primary_cook + count(joint_cooks)
+ // sum primary_cook + count(joint_cooks)
   $primary_cook = $entity->field_primary_cook;
   $joint_cooks = $entity->field_joint_cooks;
-  if (empty($primary_cook) && empty($joint_cooks)) { return; }
+
+  if (empty($primary_cook['und']) && empty($joint_cooks['und'])) { return; }
   
   $cooks = 0;
-  if (!empty($primary_cook)) {
+  if (!empty($primary_cook['und'])) {
     $cooks += 1;
   }
-  if (count($joint_cooks)) {
+  if (count($joint_cooks['und'])) {
     $cooks += count($joint_cooks);
   }
   $entity_field[0]['value'] = $cooks;
@@ -40,7 +41,7 @@ function computed_field_field_cooks_compute(&$entity_field, $entity_type, $entit
 function computed_field_field_status_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
  // @TODO check primary cook's setting, mark as OPEN or CLOSED
   $user_profile = profile2_load_by_user(user_load($entity->uid)); 
-  $joint_work_shifts_welcome = $user_profile['main']->joint_work_shifts_welcome['und'][0]['value'];
+  $joint_work_shifts_welcome = $user_profile['main']->field_joint_work_shifts_welcome['und'][0]['value'];
   
   $status = 'OPEN';
   if (!$joint_work_shifts_welcome) {
@@ -56,22 +57,47 @@ function computed_field_field_status_compute(&$entity_field, $entity_type, $enti
  *
  */
 function computed_field_field_total_jars_cooked_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
-  // @TODO sum field_w_jars_cooked + field_n_jars_cooked
+  // sum field_w_jars_cooked + field_n_jars_cooked
   $sum = 0;
   $w_jars_cooked = _soyoco_view_node_fields($entity,'w_jars_cooked');
   $n_jars_cooked = _soyoco_view_node_fields($entity,'n_jars_cooked');
-  
-  if (empty($w_jars_cooked) && empty($n_jars_cooked)) {
-    return;
-  }
-  
   $total_jars_cooked = $w_jars_cooked + $n_jars_cooked;
-  $entity_field = $total_jars_cooked;
+  $entity_field[0]['value'] = intval($total_jars_cooked);
 }
 
 /**
  * NODETYPE: yogurt_share
  */
+
+/**
+ * field_end_date_compute()
+ *
+ *
+ */
+function computed_field_field_end_date_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
+  $start = $entity->field_start_date['und'][0]['value'];
+  $duration = $entity->field_duration['und'][0]['value'];
+  if (!isset($start) || !isset($duration)) {
+    return;
+  }
+  $offset = ' + ' . $duration . ' Thursdays';
+  $end_date = strtotime(date("Y-m-d", strtotime($start)) . $offset);
+  $entity_field[0]['value'] = $end_date;
+}
+
+/**
+ * field_end_date_display()
+ */
+function computed_field_field_end_date_display($field, $entity_field_item, $entity_lang, $langcode) {
+  $date_text = date('D, n/d',$entity_field_item['value']);
+  /*
+  $three_weeks_hence = strtotime(date("Y-m-d", strtotime(time())) . ' +3 years');
+  if ($entity_field_item['value'] < strtotime($three_weeks_hence)) {
+    return '<span class="label label-danger">' . $date_text . '</span>';
+  }
+  */
+  return $date_text;
+}
 
 /**
  * field_weeks_left_compute()
@@ -107,7 +133,11 @@ function computed_field_field_adjusted_jar_count_compute(&$entity_field, $entity
   $user_profile = profile2_load_by_user(user_load($entity->uid)); 
   $discount = $user_profile['main']->field_per_share_discount['und'][0]['value'];
   
-  $entity_field[0]['value'] = floatval($total_jars - $discount);
+  $adjusted_jar_count = floatval($total_jars - $discount);
+  if ( $adjusted_jar_count < 1) {
+    $adjusted_jar_count = 1;
+  }
+  $entity_field[0]['value'] = $adjusted_jar_count;
 }
 
 
@@ -118,26 +148,27 @@ function computed_field_field_adjusted_jar_count_compute(&$entity_field, $entity
  */
 function computed_field_field_work_share_goal_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   $term = variable_get('weeks_in_one_term', 24);
-  
+  $adjusted_jar_count = $entity->field_adjusted_jar_count['und'][0]['value'];
   // query all active shares
-  $active_shares = _soyoco_query_active_shares();
-  
-  if (isset($active_shares['node'])) {
-    $nids = array_keys($active_shares['node']);
-    $nodes = entity_load('node', $nids);
+  $nodes = _soyoco_query_active_shares();
+  if (!$nodes) {
+    return;
   }
-  
   $adjusted_jar_count_sum = 0;
   foreach ($nodes as $node) {
     if (!empty($node->field_adjusted_jar_count)) {
-      dpm($node->field_adjusted_jar_count);
       $adjusted_jar_count_sum += $node->field_adjusted_jar_count['und'][0]['value'];
     }
   }
-  drupal_set_message($term . ' divided by ' . $adjusted_jar_count_sum);
-  $entity_field[0]['value'] = floatval($term / $adjusted_jar_count_sum);
+  $entity_field[0]['value'] = floatval($adjusted_jar_count * $term / $adjusted_jar_count_sum);
 }
 
+/**
+ * field_work_share_goal_display()
+ */
+function computed_field_field_work_share_goal_display($field, $entity_field_item, $entity_lang, $langcode) {
+  return round($entity_field_item['value'],1);
+}
 
 /**
  * field_work_share_completed_compute()
@@ -149,9 +180,20 @@ function computed_field_field_work_share_completed_compute(&$entity_field, $enti
   
   $work_share_completed = 0;
   // query all work shifts with this user as primary cook
-  // foreach one, add up points (points = 1/$shift->cooks)
+  $nodes = _soyoco_query_work_shifts_as_primary($entity->uid);
+  if ($nodes) {  
+    // foreach one, add up points (points = 1/$shift->cooks)
+    foreach ($nodes as $node) {
+      $work_share_completed += floatval(1/$node->field_cooks['und'][0]['value']);
+    }
+  }
   // query all work shifts with this user as joint cook
-  // foreach one, add up points
+  $nodes = _soyoco_query_work_shifts_as_joint($entity->uid);
+  if ($nodes) {
+    foreach ($nodes as $node) {
+      $work_share_completed += floatval(1/$node->field_cooks['und'][0]['value']);
+    }
+  }
   $entity_field[0]['value'] = $work_share_completed;
 }
 
@@ -162,10 +204,18 @@ function computed_field_field_work_share_completed_compute(&$entity_field, $enti
  *
  */
 function computed_field_field_work_share_difference_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
-  // @TODO Work Share Goal - Work Share Completed
+  // Work Share Goal - Work Share Completed
   $goal       = _soyoco_view_node_fields($entity,'work_share_goal');
   $completed  = _soyoco_view_node_fields($entity,'work_share_completed');
   $entity_field[0]['value'] = floatval($goal - $completed);
+}
+
+
+/**
+ * field_work_share_difference_display()
+ */
+function computed_field_field_work_share_difference_display($field, $entity_field_item, $entity_lang, $langcode) {
+  return round($entity_field_item['value'],1);
 }
 
 
@@ -175,10 +225,14 @@ function computed_field_field_work_share_difference_compute(&$entity_field, $ent
  *
  */
 function computed_field_field_completed_percentage_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
-  // @TODO Work Share Goal / Work Share Completed
+  // Work Share Goal / Work Share Completed
   $goal       = _soyoco_view_node_fields($entity,'work_share_goal');
   $completed  = _soyoco_view_node_fields($entity,'work_share_completed');
-  $entity_field[0]['value'] = intval(floatval(100 * $completed / $goal));
+  if ($goal <= 0) {
+    $entity_field[0]['value'] = '100%';
+    return;
+  }
+  $entity_field[0]['value'] = intval(floatval(100 * $completed / $goal)) . '%';
 }
 
 
