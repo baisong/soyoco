@@ -103,7 +103,11 @@ function _soyoco_add_missing_work_shifts($start_date,$end_date) {
   while ($iter_date < $end_date) {
     $nodes = _soyoco_query_shift_by_date($iter_date);
     dpm($nodes,__FUNCTION__);
-    _soyoco_add_work_shift($iter_date);
+    if (empty($nodes)) {
+      _soyoco_add_work_shift($iter_date);
+    } else {
+      drupal_set_message('Great! Work shift already exists for ' . $iter_date);
+    }
     $iter_date = strtotime(date("Y-m-d",$iter_date) . ' +1 week');
   }
 }
@@ -138,19 +142,14 @@ function _soyoco_work_shift_title($datetime) {
     // keep subtracting a week
     $i = strtotime(date("Y-m-d",$i) . ' -1 week');
     $i_month = date('F',$i);
-    // increment week ordinal
     $week_ordinal += 1;
   }
-  //dpm($month);
-  //dpm($week_ordinal);
   $title = $month . ' ' . $week_names[$week_ordinal];
   return $title;
 }
 
 function _soyoco_add_work_shift($datetime) {
-  $date = date("Y-m-d",$datetime) . 'T00:00:00';
-  //_soyoco_intToDateArray($datetime);
-  dpm($date,__FUNCTION__);
+  $date =  array('date' => date("Y-m-d",$datetime), 'time' => '00:00:00');
   $name = 'soyoco';
   $title = _soyoco_work_shift_title($datetime);
   $values = array(
@@ -179,17 +178,4 @@ function _soyoco_add_node($type,$title = 'untitled',$name = 'soyoco',$values = a
     }
   }
   drupal_form_submit("{$node->type}_node_form", $form_state, $node);
-}
-
-/**
- * Utility function which converts a string representation of a unix timestamp
- * and converts to an array suitable for the Drupal date widget (3 drop down combo 
- * boxes, month, day, year).
- */
-function _soyoco_intToDateArray($timestr) {
-  $timestamp = intval($timestr);
-  $year = date('Y', $timestamp);
-  $month = date('m',$timestamp);
-  $day = date('d',$timestamp);
-  return array('year' => $year, 'month' => $month, 'day' => $day);
 }

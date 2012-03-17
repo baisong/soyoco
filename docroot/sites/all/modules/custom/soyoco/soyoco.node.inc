@@ -37,7 +37,6 @@ function soyoco_node_update($node) {
  *
  */
 function soyoco_form_work_shift_node_form_alter(&$form, &$form_state, $form_id) {
-  
  /*
  // @TODO hide primary_cook fld from non-admins if already set to non-curr usr
  //

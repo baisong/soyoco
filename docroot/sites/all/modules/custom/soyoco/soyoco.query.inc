@@ -95,7 +95,7 @@ function _soyoco_query_work_shifts_as_joint($uid) {
  *
  */
 function _soyoco_query_shift_by_date($datetime) {
-  $date = date("Y-m-d h:i:s",$datetime);
+  $date = date("Y-m-d",$datetime) . ' 00:00:00';
   
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
