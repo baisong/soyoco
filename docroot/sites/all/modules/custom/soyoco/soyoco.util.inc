@@ -10,27 +10,29 @@
  *
  *
  */
-function _soyoco_render_my_active_share() {
+function _soyoco_render_user_page() {
   global $user;
   // display shares
-  $nodes = _soyoco_query_user_active_shares($user->uid);  
-  if (!$nodes) {
+  $shares = _soyoco_query_user_active_shares($user->uid);  
+  if (!$shares) {
     return 'You do not currently have an active share.';
   } else {
     $output = '';
-    foreach ($nodes as $node) {
-      $output .= theme('soyoco_yogurt_share',array('node' => $node));
-    }
-  }
-  // attach work shifts remaining
-  if (isset($node->field_end_date['und'][0]['value'])) {
-    $nodes = _soyoco_query_work_shifts_remaining($node->field_end_date['und'][0]['value']);
-    if ($nodes) {
-      foreach ($nodes as $node) {
-        $output .= theme('node_page',array('node' => $node));
-      } 
-    } else {
-      $output .= '<p>No remaining work shifts!</p>';
+    foreach ($shares as $share) {
+      $output .= theme('soyoco_yogurt_share',array('node' => $share));
+        // attach work shifts remaining
+      if (!isset($share->field_end_date['und'][0]['value'])) {
+        return $output;
+      }
+      $shifts = _soyoco_query_work_shifts_remaining($share->field_end_date['und'][0]['value']);
+      if ($shifts) {
+        foreach ($shifts as $shift) {
+          $output .= theme('soyoco_work_shift',array('node' => $shift));
+        }
+      } else {
+        dpm($share);
+        $output .= '<p>No remaining work shifts!</p>';
+      }
     }
   }
   return $output;
@@ -82,13 +84,16 @@ function _soyoco_view_node_fields($node,$fieldname,$entity_type='node') {
   $output = '';
   $fname = 'field_' . $fieldname;
   $fields = field_get_items($entity_type, $node, $fname);
+  if (isset($node->$fname) && empty($node->$fname)) {
+    return;
+  }
   if (is_array($fields)) {
     foreach ($fields as $key=>$value) {
       $this_field = field_view_value($entity_type, $node, $fname, $fields[$key]);
       $output .= render($this_field); 
     }
   } else {
-    drupal_set_message('You cannot retrieve field_' . $fieldname . ' from node ' . $node-> type . $node->nid);
+    drupal_set_message('No field_' . $fieldname . ' on node ' . $node-> type . $node->nid);
   }
   return $output;
 }
@@ -116,11 +121,26 @@ function _soyoco_add_missing_work_shifts($start_date,$end_date) {
  *
  */
 function _soyoco_update_shares() {
-  $active_shares = _soyoco_query_active_shares();
-  if (isset($active_shares['node'])) {
-    $nids = array_keys($active_shares['node']);
-    $nodes = entity_load('node', $nids);
-  } else {
+  $nodes = _soyoco_query_all_shares();
+  if (empty($nodes)) {
+    drupal_set_message('Error! No shares?');
+    return;
+  }
+  foreach ($nodes as $node) {
+    //dpm($node);
+    node_save($node);
+  }
+}
+
+/**
+ * _soyoco_update_shares()
+ *
+ *
+ */
+function _soyoco_update_shifts() {
+  $nodes = _soyoco_query_all_shifts();
+  if (empty($nodes)) {
+    drupal_set_message('Error! No shifts?');
     return;
   }
   foreach ($nodes as $node) {
@@ -153,7 +173,7 @@ function _soyoco_add_work_shift($datetime) {
   $values = array(
     'yogurt_week_date' => $date,
   );
-  drupal_set_message('adding workshift ' . $title . ' for ' . $date);
+  //drupal_set_message('adding workshift ' . $title . ' for ' . $date);
   _soyoco_add_node('work_shift',$title,$name,$values);
 }
 
@@ -171,7 +191,7 @@ function _soyoco_add_node($type,$title = 'untitled',$name = 'soyoco',$values = a
   $form_state['values']['op'] = t('Save');
   if (count($values)) {
     foreach ($values as $fieldname=>$value) {
-      dpm($fieldname,__FUNCTION__);dpm($value,__FUNCTION__);
+      //dpm($fieldname,__FUNCTION__);dpm($value,__FUNCTION__);
       $form_state['values']['field_' . $fieldname][$node->language][0]['value'] = $value;  
     }
   }

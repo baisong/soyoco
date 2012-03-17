@@ -1,0 +1,15 @@
+#breadcrumb { display: none; }
+#block-user-login #edit-name,
+#block-user-login #edit-pass { width: 95%; }
+.page-user .tabs.primary { display:none; }
+h2 small { font-size: 0.8em; }
+fieldset legend { position: relative !important; background-color:transparent !important}
+legend { border:0 none !important; }
+#work-shift-node-form .form-item-title { display:none;}
+#work-shift-node-form #edit-field-yogurt-week-date { display:none; }
+.node-type-work-shift .tabs.primary { display: none; }
+.display-none { display: none !important; }
+.node-type-work-shift .form-item-field-primary-cook-und-0-target-id { display: none; }
+.node-type-work-shift .form-item-field-comment-und-0-value { margin-top:10px; }
+#field-cook-date-add-more-wrapper .fieldset-legend { display: none; }
+#field-cook-date-add-more-wrapper { margin-top: -60px; }

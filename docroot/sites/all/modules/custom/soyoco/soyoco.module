@@ -15,10 +15,16 @@ function soyoco_init() {
   module_load_include('inc','soyoco','soyoco.compute');
   module_load_include('inc','soyoco','soyoco.node');
   module_load_include('inc','soyoco','soyoco.query');
-  if (arg(0) === 'shares') {
-    _soyoco_update_shares();
-    $final_date = _soyoco_query_final_work_shift_date();
-    drupal_set_message('The final work shift date is ' . date('D, n/d',$final_date));
+  global $user;
+  if ((int)$user->uid === (int)1) {
+    if (arg(0) === 'shares') {
+      _soyoco_update_shares();
+      drupal_set_message('updated shares');
+    }
+    if (arg(0) === 'shifts' ) {
+      _soyoco_update_shifts();
+      drupal_set_message('updated shifts');
+    }
   }
 }
 
@@ -34,6 +40,11 @@ function soyoco_theme() {
     'soyoco_yogurt_share' => array(
       'variables' => array('node' => NULL),
       'template' => 'yogurt-share',
+      'path' => $tpl_path,
+    ),
+    'soyoco_work_shift' => array(
+      'variables' => array('node' => NULL),
+      'template' => 'work-shift',
       'path' => $tpl_path,
     ),
   );
@@ -68,7 +79,7 @@ function soyoco_user_view($account, $view_mode = 'full', $langcode = NULL) {
     '#attributes' => array('class' => array('soyoco')), 
     '#title' =>  t('My Active Share'),
     '#markup' => 
-      _soyoco_render_my_active_share(), 
+      _soyoco_render_user_page(), 
       '#attributes' => array('class' => array('icon-heart')
     ),
   );

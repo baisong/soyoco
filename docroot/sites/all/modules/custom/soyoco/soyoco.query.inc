@@ -22,20 +22,36 @@ function _soyoco_query_load_nodes($query_result) {
 /**
  * _soyoco_query_active_shares()
  *
- *
+ * @FIXME this should only do ACTIVE shares
  */  
-function _soyoco_query_active_shares() {
+function _soyoco_query_all_shares() {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'yogurt_share')
     ->propertyCondition('status', 1)
-    ->fieldCondition('field_start_date', 'value', time(), '>')
+    //->fieldCondition('field_start_date', 'value', time(), '>')
     ->addMetaData('account', user_load(1)); // run the query as user 1  
   
   $result = $query->execute();
   return _soyoco_query_load_nodes($result);
 }
 
+/**
+ * _soyoco_query_active_shares()
+ *
+ *
+ */  
+function _soyoco_query_all_shifts() {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->propertyCondition('type', 'work_shift')
+    ->propertyCondition('status', 1)
+    //->fieldCondition('field_start_date', 'value', time(), '>')
+    ->addMetaData('account', user_load(1)); // run the query as user 1  
+  
+  $result = $query->execute();
+  return _soyoco_query_load_nodes($result);
+}
 
 /**
  * _soyoco_query_user_active_shares()
@@ -114,12 +130,17 @@ function _soyoco_query_shift_by_date($datetime) {
  *
  * @TODO: make this only look for active share work shifts
  */ 
-function _soyoco_query_work_shifts_remaining($end_date) {
+function _soyoco_query_work_shifts_remaining($datetime) {
+  $now = strtotime(date("Y-m-d",time()) . '-1 Thursday');
+  $now_date = date("Y-m-d",$now) . ' 00:00:00';
+  $end_date = date("Y-m-d",$datetime) . ' 00:00:00';
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'work_shift')
     ->propertyCondition('status', 1)
     ->fieldCondition('field_yogurt_week_date','value', $end_date, '<=')
+    ->fieldCondition('field_yogurt_week_date','value', $now_date, '>=')
+    ->fieldOrderBy('field_yogurt_week_date','value','asc')
     ->addMetaData('account', user_load(1)); // run the query as user 1  
   
   $result = $query->execute();

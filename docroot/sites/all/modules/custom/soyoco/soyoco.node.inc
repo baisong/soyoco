@@ -37,6 +37,37 @@ function soyoco_node_update($node) {
  *
  */
 function soyoco_form_work_shift_node_form_alter(&$form, &$form_state, $form_id) {
+  dpm($form);
+  $week_date = $form['#node']->field_yogurt_week_date['und'][0]['value'];
+  $form['title']['#prefix'] = 'For the week of ' . date("l, F jS, Y",strtotime($week_date));
+  unset($form['actions']['preview']);
+  $form['actions']['submit']['#suffix'] = '<a href="/?q=user">Cancel</a>';
+  $form['actions']['submit']['#value'] = 'Confirm Work Shift';
+  if (arg(3) == 'signup') {
+    global $user;
+    $form['field_primary_cook']['und'][0]['target_id']['#attributes']['class'][] = 'display-none';
+    if (empty($form['field_primary_cook']['und'][0]['target_id']['#default_value'])) {
+      $form['field_primary_cook']['und'][0]['target_id']['#default_value'] = $user->uid;
+      // $form['field_joint_cooks']['#attributes']['class'][] = 'display-none';
+    } else {
+      $delta = count($form['field_joint_cooks']['und']);
+      // $form['field_joint_cooks']['und'][$delta]['target_id']['#default_value'] = $user->uid;
+    }
+    $form['#action'] .= '?destination=thank-you';
+    // $form['actions']['submit']['#submit'][] = 'soyoco_shift_submit';
+    return;
+  }
+  if (arg(3) == 'cancel') {
+    if ($form['field_primary_cook']['und'][0]['target_id']['#default_value'] == $user->uid) {
+      $form['field_primary_cook']['und'][0]['target_id']['#default_value'] = 0;
+      $form['field_primary_cook']['#attributes']['class'][] = 'display-none';
+    } else {
+    
+    }
+    $form['#action'] .= '?destination=thank-you';
+    //$form['actions']['submit']['#submit'][] = 'soyoco_shift_submit';
+    return;
+  }
  /*
  // @TODO hide primary_cook fld from non-admins if already set to non-curr usr
  //
@@ -47,6 +78,12 @@ function soyoco_form_work_shift_node_form_alter(&$form, &$form_state, $form_id) 
       if (!(empty(field) && val != usr
         $form['primary_cook']['#access'] = FALSE
  */
+}
+
+function soyoco_shift_submit($form, &$form_state) {
+  drupal_set_message($form['form_id']);
+  $form_state['rebuild'] = TRUE;
+  $form_state['redirect'] = 'user';
 }
 
 /**

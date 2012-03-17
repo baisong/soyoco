@@ -16,18 +16,21 @@
  *
  */ 
 function computed_field_field_cooks_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
- // sum primary_cook + count(joint_cooks)
+  // sum primary_cook + count(joint_cooks)
+  // dpm($entity);
   $primary_cook = $entity->field_primary_cook;
   $joint_cooks = $entity->field_joint_cooks;
 
-  if (empty($primary_cook['und']) && empty($joint_cooks['und'])) { return; }
+  if (empty($primary_cook) && empty($joint_cooks)) { return; }
   
   $cooks = 0;
-  if (!empty($primary_cook['und'])) {
+  if (!empty($primary_cook['und'][0]['target_id'])) {
     $cooks += 1;
   }
+  if (empty($joint_cooks)) {return;}
+  
   if (count($joint_cooks['und'])) {
-    $cooks += count($joint_cooks);
+    $cooks += count($joint_cooks); // @FIXME not counting more than 1 joint?
   }
   $entity_field[0]['value'] = $cooks;
 }
@@ -39,15 +42,30 @@ function computed_field_field_cooks_compute(&$entity_field, $entity_type, $entit
  *
  */ 
 function computed_field_field_status_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
- // @TODO check primary cook's setting, mark as OPEN or CLOSED
-  $user_profile = profile2_load_by_user(user_load($entity->uid)); 
-  $joint_work_shifts_welcome = $user_profile['main']->field_joint_work_shifts_welcome['und'][0]['value'];
-  
-  $status = 'OPEN';
-  if (!$joint_work_shifts_welcome) {
+  //dpm($entity);
+  // if this date has passed, mark as "DONE"
+  $time = strtotime($entity->field_yogurt_week_date['und'][0]['value']);
+  $now = strtotime(date("Y-m-d",time()) . '-1 day');
+  $is_done = ((int)$time <= (int)$now);
+  if ($is_done) {
+    $entity_field[0]['value'] = 'DONE';
+    return;
+  }
+  // if there is no primary cook, mark as "OPEN"
+  $primary_cook = $entity->field_primary_cook;
+  if (!isset($primary_cook['und'][0]['target_id'])) {
+    $entity_field[0]['value'] = 'OPEN';
+    return;
+  }
+  // if the cook does not welcome joint shifts, mark as "CLOSED"
+  $user_profile = profile2_load_by_user(user_load($primary_cook['und'][0]['target_id'])); 
+  $joint_welcome_field = $user_profile['main']->field_joint_work_shifts_welcome;
+  $joint_welcome = (!empty($joint_welcome_field['und'][0]['value']));
+  if (!$joint_welcome) {
     $status = 'CLOSED';
   }
-  $entity_field[0]['value'] = $status;
+  // default to "OPEN"
+  $entity_field[0]['value'] = 'OPEN';
 }
 
 
@@ -58,9 +76,11 @@ function computed_field_field_status_compute(&$entity_field, $entity_type, $enti
  */
 function computed_field_field_total_jars_cooked_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // sum field_w_jars_cooked + field_n_jars_cooked
-  $sum = 0;
   $w_jars_cooked = _soyoco_view_node_fields($entity,'w_jars_cooked');
   $n_jars_cooked = _soyoco_view_node_fields($entity,'n_jars_cooked');
+  if ($w_jars_cooked && $n_jars_cooked) {
+    return;
+  }
   $total_jars_cooked = $w_jars_cooked + $n_jars_cooked;
   $entity_field[0]['value'] = intval($total_jars_cooked);
 }
@@ -108,8 +128,11 @@ function computed_field_field_end_date_display($field, $entity_field_item, $enti
  */
 function computed_field_field_weeks_left_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // first, calculate the time lapse between now and the end, both dates rounded
+  if (!isset($entity->field_end_date['und'][0]['value'])) {
+    return;
+  }
   $this_week    = _soyoco_round_up_week(time());
-  $share_expire = $entity->field_begin_date['und'][0]['value2'];
+  $share_expire = $entity->field_end_date['und'][0]['value'];
   $expire_week  = _soyoco_round_up_week($share_expire);
   $time_lapse = $expire_week - $this_week;
   
@@ -152,7 +175,7 @@ function computed_field_field_work_share_goal_compute(&$entity_field, $entity_ty
   $term = variable_get('weeks_in_one_term', 24);
   $adjusted_jar_count = $entity->field_adjusted_jar_count['und'][0]['value'];
   // query all active shares
-  $nodes = _soyoco_query_active_shares();
+  $nodes = _soyoco_query_all_shares();
   if (!$nodes) {
     return;
   }

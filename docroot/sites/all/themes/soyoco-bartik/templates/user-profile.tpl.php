@@ -31,9 +31,17 @@
  *   Where the html is handled for each item in the group.
  * @see template_preprocess_user_profile()
  */
+ global $user;
 ?>
 <div class="profile"<?php print $attributes; ?>>
-  <p>Prefix</p>
-  <?php print render($user_profile); ?>
-  <p>Suffix</p>
+  <p>
+    <a href="/?q=user/<?php print $user->uid; ?>/edit">
+      Edit Login Info
+    </a> |
+    <a href="/?q=user/<?php print $user->uid; ?>/edit/main">
+      Edit Share Profile
+    </a>
+  </p>
+  <?php //print render($user_profile); ?>
+  <?php print _soyoco_render_user_page() ?>
 </div>
