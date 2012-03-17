@@ -29,7 +29,7 @@ function _soyoco_query_active_shares() {
   $query->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'yogurt_share')
     ->propertyCondition('status', 1)
-    ->fieldCondition('field_begin_date', 'value2', time(), '>')
+    ->fieldCondition('field_start_date', 'value', time(), '>')
     ->addMetaData('account', user_load(1)); // run the query as user 1  
   
   $result = $query->execute();

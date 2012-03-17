@@ -102,11 +102,9 @@ function _soyoco_add_missing_work_shifts($start_date,$end_date) {
   $iter_date = $start_date;
   while ($iter_date < $end_date) {
     $nodes = _soyoco_query_shift_by_date($iter_date);
-    dpm($nodes,__FUNCTION__);
-    if (empty($nodes)) {
+    // @FIXME should make sure it's a thursday!
+    if (empty($nodes)) { 
       _soyoco_add_work_shift($iter_date);
-    } else {
-      drupal_set_message('Great! Work shift already exists for ' . $iter_date);
     }
     $iter_date = strtotime(date("Y-m-d",$iter_date) . ' +1 week');
   }
