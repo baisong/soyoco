@@ -9,12 +9,13 @@ module_load_include('inc','soyoco','soyoco.compute');
 module_load_include('inc','soyoco','soyoco.node');
 module_load_include('inc','soyoco','soyoco.query');
 module_load_include('inc','soyoco','soyoco.theme');
+
+
 /**
  * Implements HOOK_nodeapi.
  *
  */
 function soyoco_init() {
-
   if (arg(0) === 'shares') {
     _soyoco_update_shares();
     drupal_set_message('updated shares');
