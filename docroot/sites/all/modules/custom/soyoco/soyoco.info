@@ -10,3 +10,5 @@ files[] = soyoco.compute.inc
 files[] = soyoco.util.inc
 files[] = soyoco.node.inc
 files[] = soyoco.query.inc
+files[] = soyoco.theme.inc
+files[] = soyoco.pages.inc
