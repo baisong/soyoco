@@ -192,7 +192,7 @@ function computed_field_field_work_share_goal_compute(&$entity_field, $entity_ty
  * field_work_share_goal_display()
  */
 function computed_field_field_work_share_goal_display($field, $entity_field_item, $entity_lang, $langcode) {
-  return round($entity_field_item['value'],1);
+  return number_format(round($entity_field_item['value'], 1), 1);
 }
 
 /**
@@ -205,18 +205,29 @@ function computed_field_field_work_share_completed_compute(&$entity_field, $enti
   
   $work_share_completed = 0;
   // query all work shifts with this user as primary cook
-  $nodes = _soyoco_query_work_shifts_as_primary($entity->uid);
-  if ($nodes) {  
-    // foreach one, add up points (points = 1/$shift->cooks)
-    foreach ($nodes as $node) {
-      $work_share_completed += floatval(1/$node->field_cooks['und'][0]['value']);
-    }
-  }
-  // query all work shifts with this user as joint cook
-  $nodes = _soyoco_query_work_shifts_as_joint($entity->uid);
+  $uid   = $entity->uid;
+  $date1 = strtotime($entity->field_start_date['und'][0]['value']);
+  $date2 = strtotime(date('Y-m-d', $entity->field_end_date['und'][0]['value']));
+  $nodes = _soyoco_query_work_shifts_as_primary($uid, $date1, $date2);
+  
   if ($nodes) {
     foreach ($nodes as $node) {
-      $work_share_completed += floatval(1/$node->field_cooks['und'][0]['value']);
+      $cooks = $node->field_cooks['und'][0]['value'];
+      $points = floatval(1 / $cooks);
+      //dpm($points);
+      $work_share_completed += $points;
+    }
+  }
+  
+  // query all work shifts with this user as joint cook
+  $nodes = _soyoco_query_work_shifts_as_joint($entity->uid, $date1, $date2);
+  
+  if ($nodes) {
+    foreach ($nodes as $node) {
+      $cooks = $node->field_cooks['und'][0]['value'];
+      $points = floatval(1 / $cooks);
+      //dpm($points);
+      $work_share_completed += $points;
     }
   }
   $entity_field[0]['value'] = $work_share_completed;

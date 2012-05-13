@@ -74,14 +74,23 @@ function _soyoco_query_user_active_shares($uid) {
 /**
  * _soyoco_query_work_shifts_as_primary()
  *
- * @TODO: make this only look for active share work shifts
- */ 
-function _soyoco_query_work_shifts_as_primary($uid) {
+ * @TODO: enforce week_date <= $enddate fieldCondition.
+ * @param $startdate (timestamp) 
+ */
+function _soyoco_query_work_shifts_as_primary($uid, $startdate, $enddate) {
+  $date1 = date("Y-m-d", $startdate) . ' 00:00:00';
+  $date2 = date("Y-m-d", $enddate) . ' 00:00:00';
+  //dpm($uid);
+  //dpm($startdate);
+  //dpm($enddate);
+  
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'work_shift')
     ->propertyCondition('status', 1)
     ->fieldCondition('field_primary_cook', 'target_id', $uid, '=')
+    ->fieldCondition('field_yogurt_week_date', 'value', $startdate, '>=')
+    //->fieldCondition('field_yogurt_week_date', 'value', $enddate, '<=')
     ->addMetaData('account', user_load(1)); // run the query as user 1  
   
   $result = $query->execute();
@@ -90,16 +99,17 @@ function _soyoco_query_work_shifts_as_primary($uid) {
 
 
 /**
- * _soyoco_query_work_shifts_as_joint()
+ * Return all work shifts where this user is joing, in active share ONLY
  *
- * @TODO: make this only look for active share work shifts
  */ 
-function _soyoco_query_work_shifts_as_joint($uid) {
+function _soyoco_query_work_shifts_as_joint($uid, $startdate, $enddate) {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'work_shift')
     ->propertyCondition('status', 1)
     ->fieldCondition('field_joint_cooks', 'target_id', $uid, '=')
+    ->fieldCondition('field_yogurt_week_date', 'value', $startdate, '>=')
+    ->fieldCondition('field_yogurt_week_date', 'value', $enddate, '<=')
     ->addMetaData('account', user_load(1)); // run the query as user 1  
   
   $result = $query->execute();
@@ -158,7 +168,7 @@ function _soyoco_query_final_work_shift_date() {
   $query->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'yogurt_share')
     ->propertyCondition('status', 1)
-    ->fieldOrderBy('field_end_date','value','desc')
+    ->fieldOrderBy('field_end_date', 'value', 'desc')
     ->range(0,1)
     ->addMetaData('account', user_load(1)); // run the query as user 1  
   

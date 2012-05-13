@@ -1,30 +1,30 @@
 <?php
-
 /**
  * @file soyoco.module
  * Drupal 7 module
  */
 
+
 /**
- * implements hook_nodeapi()
+ * Implements HOOK_nodeapi
  *
  *
  */
 function soyoco_init() {
+
   module_load_include('inc','soyoco','soyoco.util');
   module_load_include('inc','soyoco','soyoco.compute');
   module_load_include('inc','soyoco','soyoco.node');
   module_load_include('inc','soyoco','soyoco.query');
-  global $user;
-  if ((int)$user->uid === (int)1) {
-    if (arg(0) === 'shares') {
-      _soyoco_update_shares();
-      drupal_set_message('updated shares');
-    }
-    if (arg(0) === 'shifts' ) {
-      _soyoco_update_shifts();
-      drupal_set_message('updated shifts');
-    }
+
+  if (arg(0) === 'shares') {
+    _soyoco_update_shares();
+    drupal_set_message('updated shares');
+  }
+
+  if (arg(0) === 'shifts' ) {
+    _soyoco_update_shifts();
+    drupal_set_message('updated shifts');
   }
 }
 
@@ -47,8 +47,14 @@ function soyoco_theme() {
       'template' => 'work-shift',
       'path' => $tpl_path,
     ),
+    'soyoco_cooks' => array(
+      'variables' => array('params' => NULL),
+      'template' => 'cooks',
+      'path' => $tpl_path,
+    ),
   );
 }
+
 
 /**
  * implements hook_user_view()
@@ -56,7 +62,6 @@ function soyoco_theme() {
  *
  */
 function soyoco_user_view($account, $view_mode = 'full', $langcode = NULL) {
-  //drupal_set_message(t('Look at me! 2'));
     
   // removing 'member for...' message
   if (!isset($account->content['summary'])) {
@@ -79,8 +84,20 @@ function soyoco_user_view($account, $view_mode = 'full', $langcode = NULL) {
     '#attributes' => array('class' => array('soyoco')), 
     '#title' =>  t('My Active Share'),
     '#markup' => 
-      _soyoco_render_user_page(), 
+      _soyoco_render_user_page($account->uid), 
       '#attributes' => array('class' => array('icon-heart')
     ),
   );
 }
+
+
+/**
+ * Implements hook_user_login
+ */
+function soyoco_user_login(&$edit, $account) {
+  if (!isset($_POST['form_id']) || $_POST['form_id'] != 'user_pass_reset') {
+    $_GET['destination'] = 'user';
+  }
+}
+
+

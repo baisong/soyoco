@@ -31,7 +31,13 @@
  *   Where the html is handled for each item in the group.
  * @see template_preprocess_user_profile()
  */
- global $user;
+global $user;
+$arg1 = arg(1);
+if (isset($arg1) && is_numeric($arg1)) {
+  $uid = arg(1);
+} else {
+  $uid = $user->uid;
+}
 ?>
 <div class="profile"<?php print $attributes; ?>>
   <p>
@@ -43,5 +49,5 @@
     </a>
   </p>
   <?php //print render($user_profile); ?>
-  <?php print _soyoco_render_user_page() ?>
+  <?php print _soyoco_render_user_page($uid) ?>
 </div>
