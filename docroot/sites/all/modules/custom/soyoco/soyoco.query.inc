@@ -59,11 +59,15 @@ function _soyoco_query_all_shifts() {
  *
  */ 
 function _soyoco_query_user_active_shares($uid) {
+  $one_period_ago = strtotime(date("Y-m-d"), time()) . ' -24 weeks';
+  $one_period_ago_fmt = date("Y-m-d", $one_period_ago) . ' 00:00:00';
+
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'yogurt_share')
     ->propertyCondition('status', 1)
     ->propertyCondition('uid', $uid)
+    ->fieldCondition('field_start_date', 'value', $one_period_ago_fmt, '>=')
     ->addMetaData('account', user_load(1)); // run the query as user 1  
   
   $result = $query->execute();

@@ -33,13 +33,3 @@ function soyoco_theme() {
     ),
   );
 }
-
-
-/**
- * Provides the output for the menu item at 'admin/dash'
- * @see soyoco_menu
- * [or] 2012-05-12
- */
-function soyoco_admin_dash_view() {
-  return theme('soyoco_admin_dash');
-}

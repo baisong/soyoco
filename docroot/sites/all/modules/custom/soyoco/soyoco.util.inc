@@ -18,7 +18,7 @@ function _soyoco_render_user_page($uid) {
   } else {
     $output = '';
     foreach ($shares as $share) {
-      $output .= theme('soyoco_yogurt_share',array('node' => $share));
+      $output .= theme('soyoco_yogurt_share', array('node' => $share));
         // attach work shifts remaining
       if (!isset($share->field_end_date['und'][0]['value'])) {
         return $output;
@@ -64,7 +64,7 @@ function soyoco_weeks_til_expiry($end_date) {
  * @param $day
  * @return
  */
-function _soyoco_round_up_week($end_date,$day = 'Thursday') {
+function _soyoco_round_up_week($end_date, $day = 'Thursday') {
   $final_date = strtotime('next ' . $day);
   $ONE_WEEK = 60*60*24*7;
   
@@ -80,7 +80,7 @@ function _soyoco_round_up_week($end_date,$day = 'Thursday') {
  *
  *
  */
-function _soyoco_view_node_fields($node,$fieldname,$entity_type='node') {
+function _soyoco_view_node_fields($node, $fieldname, $entity_type='node') {
   $output = '';
   $fname = 'field_' . $fieldname;
   $fields = field_get_items($entity_type, $node, $fname);
