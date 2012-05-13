@@ -9,7 +9,7 @@ module_load_include('inc','soyoco','soyoco.compute');
 module_load_include('inc','soyoco','soyoco.node');
 module_load_include('inc','soyoco','soyoco.query');
 module_load_include('inc','soyoco','soyoco.theme');
-
+module_load_include('inc','soyoco','soyoco.pages');
 
 /**
  * Implements HOOK_nodeapi.
