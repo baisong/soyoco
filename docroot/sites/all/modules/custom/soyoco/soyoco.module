@@ -27,6 +27,47 @@ function soyoco_init() {
   }
 }
 
+function soyoco_cron() {
+  _soyoco_update_shares();
+  _soyoco_update_shifts();
+  _soyoco_simple_mail('Cron ran', 'Updated shares and shifts.');
+}
+
+
+/**
+ * Sends a simple email.
+ *
+ */
+function _soyoco_simple_mail($message_subject, $message_body) {
+  $my_module = 'soyocodddss';
+  $my_mail_token = '';
+  $from = variable_get('system_mail', 'organization@example.com');
+  $message = array(
+    'id' => $my_module . '_' . $my_mail_token,
+    'to' => 'get.oren@gmail.com',
+    'subject' => $message_subject,
+    'body' => array($message_body),
+    'headers' => array(
+      'From' => $from,
+      'Sender' => $from,
+      'Return-Path' => $from,
+    ),
+  );
+  $system = drupal_mail_system($my_module, $my_mail_token);
+
+  // The format function must be called before calling the mail function. 
+  $message = $system->format($message);
+
+  if ($system->mail($message)) {
+    // Success.
+    drupal_set_message('mail SUCCESS');
+  }
+  else {
+    // Failure.
+    drupal_set_message('mail FAIL');
+  }
+}
+
 
 /**
  * Implements HOOK_user_view.
@@ -70,5 +111,4 @@ function soyoco_user_login(&$edit, $account) {
     $_GET['destination'] = 'user';
   }
 }
-
 
