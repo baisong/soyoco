@@ -12,7 +12,7 @@
  
 /**
  * field_cooks_compute()
- *
+ * @FIXME eliminate primary cooks
  *
  */ 
 function computed_field_field_cooks_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
@@ -40,7 +40,7 @@ function computed_field_field_cooks_compute(&$entity_field, $entity_type, $entit
  * field_status_compute()
  *
  *
- */ 
+ *
 function computed_field_field_status_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   //dpm($entity);
   // if this date has passed, mark as "DONE"
@@ -66,7 +66,7 @@ function computed_field_field_status_compute(&$entity_field, $entity_type, $enti
   }
   // default to "OPEN"
   $entity_field[0]['value'] = 'OPEN';
-}
+} */
 
 
 /**
@@ -150,8 +150,8 @@ function computed_field_field_weeks_left_compute(&$entity_field, $entity_type, $
  */
 function computed_field_field_adjusted_jar_count_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // add up whole and non fat jars
-  $w_jars = _soyoco_view_node_fields($entity,'w_jars');
-  $n_jars = _soyoco_view_node_fields($entity,'n_jars');
+  $w_jars = _soyoco_view_node_fields($entity, 'w_jars');
+  $n_jars = _soyoco_view_node_fields($entity, 'n_jars');
   $total_jars = $w_jars + $n_jars;
   
   // get the discount from this user's main profile
@@ -176,6 +176,7 @@ function computed_field_field_work_share_goal_compute(&$entity_field, $entity_ty
   $adjusted_jar_count = $entity->field_adjusted_jar_count['und'][0]['value'];
   // query all active shares
   $nodes = _soyoco_query_all_shares();
+  // @FIXME should be _soyoco_query_all_active_shares()
   if (!$nodes) {
     return;
   }
@@ -208,6 +209,8 @@ function computed_field_field_work_share_completed_compute(&$entity_field, $enti
   $uid   = $entity->uid;
   $date1 = strtotime($entity->field_start_date['und'][0]['value']);
   $date2 = strtotime(date('Y-m-d', $entity->field_end_date['und'][0]['value']));
+  
+  /* [or] 2012-05-31 deprecating primary cooks.
   $nodes = _soyoco_query_work_shifts_as_primary($uid, $date1, $date2);
   
   if ($nodes) {
@@ -218,8 +221,10 @@ function computed_field_field_work_share_completed_compute(&$entity_field, $enti
       $work_share_completed += $points;
     }
   }
+  */
   
-  // query all work shifts with this user as joint cook
+  // query all work shifts with this user as cook
+  // @TODO verify only counts active shares.
   $nodes = _soyoco_query_work_shifts_as_joint($entity->uid, $date1, $date2);
   
   if ($nodes) {
@@ -241,8 +246,8 @@ function computed_field_field_work_share_completed_compute(&$entity_field, $enti
  */
 function computed_field_field_work_share_difference_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // Work Share Goal - Work Share Completed
-  $goal       = _soyoco_view_node_fields($entity,'work_share_goal');
-  $completed  = _soyoco_view_node_fields($entity,'work_share_completed');
+  $goal       = _soyoco_view_node_fields($entity, 'work_share_goal');
+  $completed  = _soyoco_view_node_fields($entity, 'work_share_completed');
   $entity_field[0]['value'] = floatval($goal - $completed);
 }
 
@@ -251,7 +256,7 @@ function computed_field_field_work_share_difference_compute(&$entity_field, $ent
  * field_work_share_difference_display()
  */
 function computed_field_field_work_share_difference_display($field, $entity_field_item, $entity_lang, $langcode) {
-  return round($entity_field_item['value'],1);
+  return round($entity_field_item['value'], 1);
 }
 
 
@@ -262,8 +267,8 @@ function computed_field_field_work_share_difference_display($field, $entity_fiel
  */
 function computed_field_field_completed_percentage_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   // Work Share Goal / Work Share Completed
-  $goal       = _soyoco_view_node_fields($entity,'work_share_goal');
-  $completed  = _soyoco_view_node_fields($entity,'work_share_completed');
+  $goal       = _soyoco_view_node_fields($entity, 'work_share_goal');
+  $completed  = _soyoco_view_node_fields($entity, 'work_share_completed');
   if ($goal <= 0) {
     $entity_field[0]['value'] = '100%';
     return;
