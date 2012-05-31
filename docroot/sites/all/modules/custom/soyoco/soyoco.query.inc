@@ -23,15 +23,28 @@ function _soyoco_query_load_nodes($query_result) {
 
 /**
  * Find all shares.
- *
- * @FIXME this should only do ACTIVE shares
  */  
 function _soyoco_query_all_shares() {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'yogurt_share')
     ->propertyCondition('status', 1)
-    //->fieldCondition('field_start_date', 'value', time(), '>')
+    ->addMetaData('account', user_load(1)); // run the query as user 1  
+  
+  $result = $query->execute();
+  return _soyoco_query_load_nodes($result);
+}
+
+
+/**
+ * Find all active shares.
+ */  
+function _soyoco_query_all_active_shares() {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->propertyCondition('type', 'yogurt_share')
+    ->propertyCondition('status', 1)
+    ->fieldCondition('field_is_active', 'value', 1, '=')
     ->addMetaData('account', user_load(1)); // run the query as user 1  
   
   $result = $query->execute();
@@ -108,14 +121,17 @@ function _soyoco_query_work_shifts_as_primary($uid, $startdate, $enddate) {
 /**
  * Find all work shifts where this user is cook, in active share ONLY
  */ 
-function _soyoco_query_work_shifts_as_joint($uid, $startdate, $enddate) {
+function _soyoco_query_work_shifts_as_joint($uid, $start_time, $end_time) {
+  $start_datetime = date('Y-m-d', $start_time) . ' 00:00:00';
+  $end_datetime = date('Y-m-d', $end_time) . ' 00:00:00';
+  
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'work_shift')
     ->propertyCondition('status', 1)
     ->fieldCondition('field_joint_cooks', 'target_id', $uid, '=')
-    ->fieldCondition('field_yogurt_week_date', 'value', $startdate, '>=')
-    ->fieldCondition('field_yogurt_week_date', 'value', $enddate, '<=')
+    ->fieldCondition('field_yogurt_week_date', 'value', $start_datetime, '>=')
+    ->fieldCondition('field_yogurt_week_date', 'value', $end_datetime, '<=')
     ->addMetaData('account', user_load(1)); // run the query as user 1  
   
   $result = $query->execute();

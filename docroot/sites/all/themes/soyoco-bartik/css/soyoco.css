@@ -24,3 +24,26 @@ legend { border:0 none !important; }
 
 .work-shift.row { border-bottom: 1px solid #aaa; }
 .work-shift.row .btn-group { margin-top: 4px; }
+
+.page-user #page-title { display: none; }
+.page-user .custom-title { margin-top: -1em; }
+
+.large { font-size: 1.3em; }
+
+.page-node-edit-signup table#field-joint-cooks-values tr th { background-color: white; }
+.page-node-edit-signup table#field-joint-cooks-values tr th label { font-size: 1.3em; margin-top:5px; }
+.page-node-edit-signup .tabledrag-toggle-weight { display: none; }
+#field-cook-date-add-more-wrapper legend {display: none; }
+
+.page-node-edit-signup #field-joint-cooks-add-more-wrapper { display: none; }
+
+.page-node-edit-join #field-joint-cooks-add-more-wrapper,
+.page-node-edit-join #field-cook-date-add-more-wrapper { display: none; }
+
+.page-node-edit-cancel #field-joint-cooks-add-more-wrapper,
+.page-node-edit-cancel #field-cook-date-add-more-wrapper,
+.page-node-edit-cancel #field-comment-add-more-wrapper { display: none; }
+
+
+.alert.margin-bottom-4em { margin-bottom: 4em; }
+.alert.margin-top-05em { margin-top: 0.5em; }

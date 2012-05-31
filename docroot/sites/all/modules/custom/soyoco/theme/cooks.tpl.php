@@ -6,13 +6,16 @@
  * -'primary' the primary cook user UID, or 0 if none.
  * -'joint' an array of uids, or an empty array if none.
  */
- // dpm($params);
+
+$count_cooks = count($params['joint']);
+$i = 0;
 ?>
 <span class="cooks">
-  &nbsp;<strong><?php print $params['primary']; ?></strong>
-  <?php if(count($params['joint'])): ?>
+  <?php if($count_cooks > 0): ?>
     <?php foreach($params['joint'] as $name): ?>
-      , <?php print $name; ?>
+      <?php print $name; ?><?php $i++; if ($i < $count_cooks) { print ', ';} ?>
     <?php endforeach; ?>
+  <?php else: ?>
+    &nbsp;
   <?php endif; ?>
 </span>

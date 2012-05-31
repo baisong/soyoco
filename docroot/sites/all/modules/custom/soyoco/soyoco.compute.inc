@@ -18,7 +18,7 @@
  *
  */
 function computed_field_field_is_active_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
-  // Shares are active unless the current time is not within the share period.
+  // Shares are inactive unless the current time is within the share period.
   if (isset($entity->type) && $entity->type === 'yogurt_share') {
     // must be after start date
     $now_time = time();
@@ -30,9 +30,8 @@ function computed_field_field_is_active_compute(&$entity_field, $entity_type, $e
     $end_date_time = $entity->field_end_date['und'][0]['value'];
     $share_not_ended = ((int)$now_time < (int)$end_date_time);
     
-    if ($share_has_begun) { $entity_field[0]['value'] = 0; return; }
-    if ($share_not_ended) { $entity_field[0]['value'] = 0; return; }
-    $entity_field[0]['value'] = 1; return;
+    if ($share_has_begun && $share_not_ended) { $entity_field[0]['value'] = 1; return; }
+    $entity_field[0]['value'] = 0; return;
   }
   
   // Shifts are inactive unless at least one cook has an active share in range, or it's in the future.
@@ -45,15 +44,20 @@ function computed_field_field_is_active_compute(&$entity_field, $entity_type, $e
     if ($shift_is_in_future) { $entity_field[0]['value'] = 1; return; }
 
     // if it's old, but there are cooks,
-    $cooks = $entity->field_joint_cooks['und'][0]['target_id'];
-    if (isset($cooks) && is_numeric($cooks[0])) {
+    $shift_has_cooks = sizeof($entity->field_joint_cooks) > 0;
+    
+    if ($shift_has_cooks) {
+      $cooks = $entity->field_joint_cooks['und'];
       // ...and a cook's share is active and started before date, it's active.
-      foreach ($cooks as $cook_uid) {
-        $cook_active_share = _soyoco_query_user_active_shares($cook_uid);
-        dpm($entity);
-        if (FALSE) {
-          $entity_field[0]['value'] = 1; return;     
-        }
+      foreach ($cooks as $cook_array) {
+        if (!isset($cook_array['target_id'])) continue;
+        $cook_active_shares_array = _soyoco_query_user_active_shares($cook_array['target_id']);
+        if (!is_array($cook_active_shares_array)) continue;
+        $cook_active_share = array_shift($cook_active_shares_array);
+        $cook_active_share_start_date_datetime = $cook_active_share->field_start_date['und'][0]['value'];
+        $cook_active_share_start_date_time = strtotime($cook_active_share_start_date_datetime);
+        $cook_active_share_had_started = ((int)$cook_active_share_start_date_time < (int)$yogurt_week_date_time);
+        if ($cook_active_share_had_started) { $entity_field[0]['value'] = 1; return; }
       }
     }
     $entity_field[0]['value'] = 0; return;
@@ -67,28 +71,15 @@ function computed_field_field_is_active_compute(&$entity_field, $entity_type, $e
 
  
 /**
- * field_cooks_compute()
- * @FIXME eliminate primary cooks
- *
+ * Counts the number of signed up cooks on a work shift.
  */ 
 function computed_field_field_cooks_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
-  // sum primary_cook + count(joint_cooks)
-  // dpm($entity);
-  $primary_cook = $entity->field_primary_cook;
-  $joint_cooks = $entity->field_joint_cooks;
-
-  if (empty($primary_cook) && empty($joint_cooks)) { return; }
-  
-  $cooks = 0;
-  if (!empty($primary_cook['und'][0]['target_id'])) {
-    $cooks += 1;
-  }
-  if (empty($joint_cooks)) {return;}
-  
-  if (count($joint_cooks['und'])) {
-    $cooks += count($joint_cooks); // @FIXME not counting more than 1 joint?
-  }
-  $entity_field[0]['value'] = $cooks;
+  $cooks = $entity->field_joint_cooks;
+  if (empty($cooks)) { return; }
+    
+  $cooks_count = 0;
+  if (sizeof($cooks['und']) > 0) { $cooks_count = sizeof($cooks['und']); }
+  $entity_field[0]['value'] = $cooks_count;
 }
 
 
@@ -187,11 +178,15 @@ function computed_field_field_weeks_left_compute(&$entity_field, $entity_type, $
   if (!isset($entity->field_end_date['und'][0]['value'])) {
     return;
   }
-  $this_week    = _soyoco_round_up_week(time());
-  $share_expire = $entity->field_end_date['und'][0]['value'];
-  $expire_week  = _soyoco_round_up_week($share_expire);
-  $time_lapse = $expire_week - $this_week;
+  $this_week = _soyoco_round_up_week(time());
+  //dpm($this_week);
+  $end_date_time = $entity->field_end_date['und'][0]['value'];
+  //dpm($end_date_time);
+  $expire_week  = _soyoco_round_up_week($end_date_time);
   
+  $time_lapse = $expire_week - $this_week;
+  dpm($expire_week);
+  dpm($this_week);
   // finally, store the integer value of the number of weeks in the time lapse 
   $num_days = intval(floor($time_lapse/(60*60*24)));
   $weeks_elapsed = ($num_days + 7) / 7;
@@ -230,16 +225,13 @@ function computed_field_field_adjusted_jar_count_compute(&$entity_field, $entity
 function computed_field_field_work_share_goal_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
   $term = variable_get('weeks_in_one_term', 24);
   $adjusted_jar_count = $entity->field_adjusted_jar_count['und'][0]['value'];
-  // query all active shares
-  $nodes = _soyoco_query_all_shares();
-  // @FIXME should be _soyoco_query_all_active_shares()
-  if (!$nodes) {
-    return;
-  }
+  $all_active_shares_array = _soyoco_query_all_active_shares();
+  if (!is_array($all_active_shares_array)) { return; }
+  
   $adjusted_jar_count_sum = 0;
-  foreach ($nodes as $node) {
-    if (!empty($node->field_adjusted_jar_count)) {
-      $adjusted_jar_count_sum += $node->field_adjusted_jar_count['und'][0]['value'];
+  foreach ($all_active_shares_array as $share_node) {
+    if (!empty($share_node->field_adjusted_jar_count)) {
+      $adjusted_jar_count_sum += $share_node->field_adjusted_jar_count['und'][0]['value'];
     }
   }
   $entity_field[0]['value'] = floatval($adjusted_jar_count * $term / $adjusted_jar_count_sum);
@@ -266,34 +258,29 @@ function computed_field_field_work_share_completed_compute(&$entity_field, $enti
   $date1 = strtotime($entity->field_start_date['und'][0]['value']);
   $date2 = strtotime(date('Y-m-d', $entity->field_end_date['und'][0]['value']));
   
-  /* [or] 2012-05-31 deprecating primary cooks.
-  $nodes = _soyoco_query_work_shifts_as_primary($uid, $date1, $date2);
-  
-  if ($nodes) {
-    foreach ($nodes as $node) {
-      $cooks = $node->field_cooks['und'][0]['value'];
-      $points = floatval(1 / $cooks);
-      //dpm($points);
-      $work_share_completed += $points;
-    }
-  }
-  */
-  
   // query all work shifts with this user as cook
   // @TODO verify only counts active shares.
-  $nodes = _soyoco_query_work_shifts_as_joint($entity->uid, $date1, $date2);
+  $work_shifts_cooked_array = _soyoco_query_work_shifts_as_joint($entity->uid, $date1, $date2);
   
-  if ($nodes) {
-    foreach ($nodes as $node) {
-      $cooks = $node->field_cooks['und'][0]['value'];
+  if (is_array($work_shifts_cooked_array)) {
+    foreach ($work_shifts_cooked_array as $shift_node) {
+      $cooks = $shift_node->field_cooks['und'][0]['value'];
       $points = floatval(1 / $cooks);
       //dpm($points);
       $work_share_completed += $points;
     }
   }
+  
   $entity_field[0]['value'] = $work_share_completed;
 }
 
+
+/**
+ * field_work_share_goal_display()
+ */
+function computed_field_field_work_share_completed_display($field, $entity_field_item, $entity_lang, $langcode) {
+  return number_format(round($entity_field_item['value'], 1), 1);
+}
 
 /**
  * field_work_share_difference_compute()

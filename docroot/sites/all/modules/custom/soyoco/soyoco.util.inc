@@ -11,6 +11,10 @@
  *
  */
 function _soyoco_render_user_page($uid) {
+  if ($uid == 1 && arg(1) != 'override') {
+    drupal_goto('admin/dashboard');
+  }
+
   // display shares
   $shares = _soyoco_query_user_active_shares($uid);  
   if (!$shares) {
@@ -60,18 +64,18 @@ function soyoco_weeks_til_expiry($end_date) {
 /**
  * soyoco_next_shareweek_ends()
  *
- * @param  $end_date
- * @param $day
+ * @param int    $end_date
+ * @param string $day
  * @return
  */
-function _soyoco_round_up_week($end_date, $day = 'Thursday') {
-  $final_date = strtotime('next ' . $day);
+function _soyoco_round_up_week($end_time, $day = 'Thursday') {
+  $final_time = strtotime('next ' . $day);
   $ONE_WEEK = 60*60*24*7;
   
-  while ($final_date < strtotime($end_date)) {
-    $final_date += $ONE_WEEK;
+  while ($final_time < $end_time) {
+    $final_time += $ONE_WEEK;
   }
-  return $final_date;
+  return $final_time;
 }
 
 

@@ -13,15 +13,35 @@
 
 $w_jars     = _soyoco_view_node_fields($node,'w_jars');
 $n_jars     = _soyoco_view_node_fields($node,'n_jars');
-$start_date = _soyoco_view_node_fields($node,'start_date');
+$start_date = $node->field_start_date['und'][0]['value'];
 $end_date   = _soyoco_view_node_fields($node,'end_date');
+$start_date_time = strtotime($start_date);
+$end_date_time = strtotime($end_date);
+
+$start_date_fmt = date('M j, Y', $start_date_time);
+$end_date_fmt = date('M j, Y', $end_date_time);
+
 $weeks_left = _soyoco_view_node_fields($node,'weeks_left');
 $wsd = _soyoco_view_node_fields($node,'work_share_difference');
 $pct = _soyoco_view_node_fields($node,'completed_percentage');
+$percent = $node->field_completed_percentage['und'][0]['value']; 
+
+if ($percent > 100) {
+  $cheer = 'Thanks for all the help!';
+  $alert_type = 'success';
+} else if ($percent > 0) {
+  $cheer = 'Keep up the good work!';
+  $alert_type = '';
+} else {
+  $cheer = 'Time to sign up!';
+  $alert_type = 'info';
+}
 ?>
-<h2>Share Information</h2>
-<div class="alert alert-info">
-  Your current Work Share Difference is <strong><?php print $wsd; ?></strong> (<?php print $pct; ?>).
+<div class="alert alert-<?php print $alert_type; ?> large">
+  <strong>
+    <?php print $cheer; ?>
+  </strong>&nbsp;
+  Your work share is <strong><?php print $pct; ?></strong> complete.
 </div>
 <div id="node-<?php print $node->nid; ?>" class="yogurt-share row">
   <div class="span4 well" style="height:100px">
@@ -47,7 +67,7 @@ $pct = _soyoco_view_node_fields($node,'completed_percentage');
     <div style="color:#333">
       <dl>
         <dt>Share Duration:</dt>
-        <dd><?php print $start_date; ?> - <?php print $end_date; ?></dd>
+        <dd><?php print $start_date_fmt; ?> - <?php print $end_date_fmt; ?></dd>
       </dl>
     </div>
   </div>

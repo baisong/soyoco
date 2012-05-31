@@ -40,14 +40,17 @@ if (isset($arg1) && is_numeric($arg1)) {
 }
 ?>
 <div class="profile"<?php print $attributes; ?>>
-  <p>
+  <h1 class="custom-title">
+  <?php print $user->name; ?>&nbsp;
+  <small>
     <a href="/?q=user/<?php print $user->uid; ?>/edit">
       Edit Login Info
     </a> |
     <a href="/?q=user/<?php print $user->uid; ?>/edit/main">
       Edit Share Profile
     </a>
-  </p>
+  </small>
+  </h1>
   <?php //print render($user_profile); ?>
   <?php print _soyoco_render_user_page($uid) ?>
 </div>
