@@ -75,7 +75,7 @@ $cook_params = array(
         </div>
       <?php elseif($mode == 'update'): ?>
         <div class="btn-group">
-          <a class="btn btn-mini btn-danger" href="/?q=node/<?php print $node->nid; ?>/edit/cancel"><i class="icon-white icon-remove"></i> cancel</a>
+          <a class="btn btn-mini btn-danger" href="/?q=node/<?php print $node->nid; ?>/edit/update"><i class="icon-white icon-remove"></i> cancel</a>
           <a class="btn btn-mini" href="/?q=node/<?php print $node->nid; ?>/edit/update"><i class="icon-edit"></i> edit</a>
         </div>
       <?php endif; ?>

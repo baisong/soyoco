@@ -185,8 +185,6 @@ function computed_field_field_weeks_left_compute(&$entity_field, $entity_type, $
   $expire_week  = _soyoco_round_up_week($end_date_time);
   
   $time_lapse = $expire_week - $this_week;
-  dpm($expire_week);
-  dpm($this_week);
   // finally, store the integer value of the number of weeks in the time lapse 
   $num_days = intval(floor($time_lapse/(60*60*24)));
   $weeks_elapsed = ($num_days + 7) / 7;

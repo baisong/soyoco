@@ -73,7 +73,7 @@ function soyoco_form_work_shift_node_form_alter(&$form, &$form_state) {
   }
   if ($user_action == 'update') {
     $form['field_cook_date']['#prefix'] = '<div class="alert margin-top-05em margin-bottom-4em">
-        <strong>Experimental!</strong> Here you can change the date, and member participation.</div>';
+        <strong>Experimental!</strong> Here you can change the date, and member participation. To cancel, delete your name if it appears in the jar name list, then hit "Save".</div>';
     return;
   }
 }

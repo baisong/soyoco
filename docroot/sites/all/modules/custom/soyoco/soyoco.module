@@ -30,7 +30,7 @@ function soyoco_init() {
 function soyoco_cron() {
   _soyoco_update_shares();
   _soyoco_update_shifts();
-  _soyoco_simple_mail('Cron ran', 'Updated shares and shifts.');
+  //_soyoco_simple_mail('Cron ran', 'Updated shares and shifts.');
 }
 
 
