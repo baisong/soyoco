@@ -3,12 +3,68 @@
 /**
  * @file soyoco.compute.inc
  * Drupal 7 module - computed field callback functions
+ * 
+ * Variable Nomenclature: date suffixes
+ *
+ *  _time     = int     1338488440
+ *  _datestr  = string  '2011-10-27'
+ *  _datetime = string  '2011-10-27 00:00:00'
+ *  _fmt      = string  '5/1'
  */
  
+ 
+/**
+ *
+ *
+ */
+function computed_field_field_is_active_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
+  // Shares are active unless the current time is not within the share period.
+  if (isset($entity->type) && $entity->type === 'yogurt_share') {
+    // must be after start date
+    $now_time = time();
+    $start_date_datetime = ($entity->field_start_date['und'][0]['value']);
+    $start_date_time = strtotime($start_date_datetime);
+    $share_has_begun = ((int)$now_time > (int)$start_date_time);
+    
+    // and must be before end date
+    $end_date_time = $entity->field_end_date['und'][0]['value'];
+    $share_not_ended = ((int)$now_time < (int)$end_date_time);
+    
+    if ($share_has_begun) { $entity_field[0]['value'] = 0; return; }
+    if ($share_not_ended) { $entity_field[0]['value'] = 0; return; }
+    $entity_field[0]['value'] = 1; return;
+  }
+  
+  // Shifts are inactive unless at least one cook has an active share in range, or it's in the future.
+  else if (isset($entity->type) && $entity->type === 'work_shift') {
+    // if work date in the future, it's active.
+    $now_time = time();
+    $yogurt_week_date_datetime = $entity->field_yogurt_week_date['und'][0]['value'];
+    $yogurt_week_date_time = strtotime($yogurt_week_date_datetime);
+    $shift_is_in_future = ((int)$now_time < (int)$yogurt_week_date_time);
+    if ($shift_is_in_future) { $entity_field[0]['value'] = 1; return; }
+
+    // if it's old, but there are cooks,
+    $cooks = $entity->field_joint_cooks['und'][0]['target_id'];
+    if (isset($cooks) && is_numeric($cooks[0])) {
+      // ...and a cook's share is active and started before date, it's active.
+      foreach ($cooks as $cook_uid) {
+        $cook_active_share = _soyoco_query_user_active_shares($cook_uid);
+        dpm($entity);
+        if (FALSE) {
+          $entity_field[0]['value'] = 1; return;     
+        }
+      }
+    }
+    $entity_field[0]['value'] = 0; return;
+  }
+}
+
 
 /**
  * NODETYPE: work_shift
  */
+
  
 /**
  * field_cooks_compute()

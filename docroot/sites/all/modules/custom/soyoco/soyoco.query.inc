@@ -1,14 +1,15 @@
 <?php
-
 /**
  * @file soyoco.query.inc
  * Drupal 7 module - query declarations
  */
 
+
 /**
- * _soyoco_query_user_active_shares()
+ * Returns an array of loaded nodes.
  *
- * @param $result return value of an EntityFieldQuery where entity_type=node
+ * @param mixed $query_result - an EntityFieldQuery where entity_type = node
+ * @return mixed $result      - array of node objects, or FALSE.
  */ 
 function _soyoco_query_load_nodes($query_result) {
   if (isset($query_result['node'])) {
@@ -19,8 +20,9 @@ function _soyoco_query_load_nodes($query_result) {
   return FALSE;
 }
 
+
 /**
- * _soyoco_query_active_shares()
+ * Find all shares.
  *
  * @FIXME this should only do ACTIVE shares
  */  
@@ -36,10 +38,10 @@ function _soyoco_query_all_shares() {
   return _soyoco_query_load_nodes($result);
 }
 
+
 /**
- * _soyoco_query_active_shares()
- *
- *
+ * Find all work shifts.
+ * @FIXME Only on active shares?
  */  
 function _soyoco_query_all_shifts() {
   $query = new EntityFieldQuery();
@@ -53,15 +55,16 @@ function _soyoco_query_all_shifts() {
   return _soyoco_query_load_nodes($result);
 }
 
+
 /**
- * _soyoco_query_user_active_shares()
- *
- *
+ * Find a user's active share.
+ * @FIXME order by published ASC, limit 1, use new computed field.
  */ 
 function _soyoco_query_user_active_shares($uid) {
-  $one_period_ago = strtotime(date("Y-m-d"), time()) . ' -24 weeks';
+  $now_fmt = date("Y-m-d", time());
+  $one_period_ago = strtotime($now_fmt . ' -24 weeks');
   $one_period_ago_fmt = date("Y-m-d", $one_period_ago) . ' 00:00:00';
-
+   
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'yogurt_share')
@@ -76,11 +79,11 @@ function _soyoco_query_user_active_shares($uid) {
 
 
 /**
- * _soyoco_query_work_shifts_as_primary()
+ * DEPRECATE
  *
  * @TODO: enforce week_date <= $enddate fieldCondition.
  * @param $startdate (timestamp) 
- */
+ *
 function _soyoco_query_work_shifts_as_primary($uid, $startdate, $enddate) {
   $date1 = date("Y-m-d", $startdate) . ' 00:00:00';
   $date2 = date("Y-m-d", $enddate) . ' 00:00:00';
@@ -99,12 +102,11 @@ function _soyoco_query_work_shifts_as_primary($uid, $startdate, $enddate) {
   
   $result = $query->execute();
   return _soyoco_query_load_nodes($result);
-}
+} */
 
 
 /**
- * Return all work shifts where this user is joing, in active share ONLY
- *
+ * Find all work shifts where this user is cook, in active share ONLY
  */ 
 function _soyoco_query_work_shifts_as_joint($uid, $startdate, $enddate) {
   $query = new EntityFieldQuery();
@@ -122,7 +124,7 @@ function _soyoco_query_work_shifts_as_joint($uid, $startdate, $enddate) {
 
 
 /**
- *
+ * Find a work shift node by it's week date.
  */
 function _soyoco_query_shift_by_date($datetime) {
   $date = date("Y-m-d",$datetime) . ' 00:00:00';
@@ -140,7 +142,7 @@ function _soyoco_query_shift_by_date($datetime) {
 
 
 /**
- * _soyoco_query_work_shifts_remaining()
+ * Find all work shifts between now and cutoff date.
  *
  * @TODO: make this only look for active share work shifts
  */ 
@@ -163,9 +165,7 @@ function _soyoco_query_work_shifts_remaining($datetime) {
 
 
 /**
- * _soyoco_query_final_work_shift_date()
- *
- *
+ * Calculates the most-distant end date among yogurt shares.
  */
 function _soyoco_query_final_work_shift_date() {
   $query = new EntityFieldQuery();
@@ -183,5 +183,3 @@ function _soyoco_query_final_work_shift_date() {
   }
   return FALSE;
 }
-
-
